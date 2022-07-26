@@ -10,8 +10,8 @@ def addition():
     print("1 +1 = %s" % sum)
 
 def tmp_space():
-    tmp_usage = "du"
-    tmp_arg = "-h"
+    tmp_usage = "ls"
+    tmp_arg = "-l"
     path = "/tmp"
     print("Space used in /tmp directory")
     call([tmp_usage, tmp_arg, path])
@@ -22,5 +22,5 @@ def main():
     tmp_space()
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  #very importan to use this file as a library
     main()
