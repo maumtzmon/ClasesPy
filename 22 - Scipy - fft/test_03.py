@@ -28,11 +28,11 @@ fig.colorbar(surf, shrink=0.5, aspect=10)
 # ==============
 # Second subplot
 # ==============
-# set up the axes for the second plot
-# ax = fig.add_subplot(1, 2, 2, projection='3d')
+#set up the axes for the second plot
+ax = fig.add_subplot(1, 2, 2, projection='3d')
 
-# # plot a 3D wireframe like in the example mplot3d/wire3d_demo
-# X, Y, Z = get_test_data(0.05)
-# ax.plot_wireframe(X, Y, Z, rstride=10, cstride=10)
+# plot a 3D wireframe like in the example mplot3d/wire3d_demo
+X, Y, Z = get_test_data(0.05)
+ax.plot_wireframe(X, Y, Z, rstride=10, cstride=10)
 
 plt.show()
