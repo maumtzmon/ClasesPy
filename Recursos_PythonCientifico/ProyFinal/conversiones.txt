@@ -1,0 +1,4 @@
+TEMPERATURA
+Kelvin	338.15
+Fahrenheit	149.0
+Celsius	65.0
