@@ -172,7 +172,7 @@ def main(argObj):
     n: longitud de la ventana, numero de muestras (pixeles en este caso)
     d: duracion entre cada muestra
     
-    E.g. freq = np.fft.fftfreq(n, d=timestep) #timestep es segundos
+    E.g. freq = np.fft.fftfreq(n, d=timestep) #nuestro stimestep es segundos
 
     Devuelve las frecuencias de muestra de la transformada discreta de Fourier. La matriz flotante 
     devuelta f contiene los centros de intervalos de frecuencia en ciclos por unidad de espaciado d
