@@ -1,0 +1,11 @@
+Hola, este es un archivo de texto.
+
+En seguida hay una lista de 5 numeros.
+
+12
+23
+14
+51
+99
+
+Fin del archivo.

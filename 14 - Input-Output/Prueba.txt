@@ -1,0 +1,4 @@
+Este es una prueba con el modo de escribir.
+Nueva línea con el modo append.
+Hola, Esto lo escribí con 
+writelines
