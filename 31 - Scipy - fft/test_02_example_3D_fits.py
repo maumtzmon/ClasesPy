@@ -1,9 +1,9 @@
 from ast import arg
 from re import M
-from zlib import Z_DEFAULT_STRATEGY
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.fft import fft, fftfreq, fftshift, ifftn
+import sys
 
 from astropy.io.fits.hdu import image
 from astropy.io import fits
@@ -17,7 +17,7 @@ file_def='proc_skp_mod9_wfr13_Vvtest_vthswings2.5_sh2.5_oh-2.5_EXPOSURE0_NSAMP1_
 
 
 
-def parser():
+def parser(args):
     parser = argparse.ArgumentParser(prog="FITSanlyzer", description='High particle FITS images analyzer. \n It looks for spurious signals embedded in CCDs images ')
 
     
@@ -189,6 +189,6 @@ def main(argObj):
 
 
 if __name__ == "__main__":
-    argObj = parser()
+    argObj = parser(sys.argv)
     exitcode = main(argObj)
     exit(code=exitcode)  
