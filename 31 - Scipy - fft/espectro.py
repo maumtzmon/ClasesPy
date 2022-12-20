@@ -72,7 +72,7 @@ def getSpurious(filePath):
         spuriousFactor['row']=popt
 
         
-    axs_all[0][0].set_ylabel('ADU')
+    axs_all[0][0].set_ylabel('ADU, plot of column')
 
     #plt.show()
 
@@ -80,7 +80,6 @@ def getSpurious(filePath):
         data=hdul[ext].data #numpy array
         header=hdul[ext].header
         x=data[10,10:690] #analisis de Registro horizontal, renglones H
-        print("")
 
         xdata=[]
         ydata=[]
@@ -108,7 +107,7 @@ def getSpurious(filePath):
 
 
         
-    axs_all[1][0].set_ylabel('ADU')
+    axs_all[1][0].set_ylabel('ADU, plot of row')
     plt.show()
 
     return spuriousFactor
@@ -131,7 +130,7 @@ def hist_RowColumn(filePath):
         axs_all[0][ext].hist(x, bins, density=True)
         #axs_all[0][ext].
         axs_all[0][ext].set_title('hdul=%1i' % ext)
-        axs_all[0][ext].set_xlabel('ADU')
+        axs_all[0][ext].set_xlabel('ADU, plot of column')
         #axs_all[0][ext].legend()
     
     axs_all[0][0].set_ylabel('counts')
@@ -149,7 +148,7 @@ def hist_RowColumn(filePath):
         axs_all[1][ext].hist(x, bins, density=True)
         #axs_all[0][ext].
         axs_all[1][ext].set_title('hdul=%1i' % ext)
-        axs_all[1][ext].set_xlabel('ADU')
+        axs_all[1][ext].set_xlabel('ADU, plot of row')
         #axs_all[1][ext].legend()
     
     axs_all[0][0].set_ylabel('counts')
@@ -197,18 +196,17 @@ def main():
         filePath=sys.argv[1]
         getSpurious(filePath)
     except:
-        path='/home/oem/datosFits/testMITLL/15DIC22/'
+        path='/home/oem/datosFits/testMITLL/20DIC22/'
         #file='proc_skp_module24_MITLL01_externalVr-5_Vtest_T170_testLeakage_vtest_vdd-22__NSAMP1_NROW650_NCOL700_EXPOSURE0_NBINROW1_NBINCOL1_img2.fits'
-        file="proc_skp_module24_MITLL01_externalVr-5_Vtest_T170_testLeakage_vtest_vdd-22__NSAMP100_NROW650_NCOL700_EXPOSURE0_NBINROW1_NBINCOL1_img5.fits"
+        file="proc_skp_module24_MITLL01_externalVr-5_Vtest_T170_testLeakage_vtest_vdd-22__NSAMP9_NROW650_NCOL700_EXPOSURE0_NBINROW1_NBINCOL1_img29.fits"
         filePath=path+file
-        #hist_RowColumn(filePath)
-        #print(getSpurious(filePath))
+        hist_RowColumn(filePath)
+        getSpurious(filePath)
         ExpoMatix=totTime(filePath)
-        #plt.plot(ExpoMatix[0],range(0, len(ExpoMatix[0])))
-        # popt, pcov = curve_fit(func, range(0, len(ExpoMatix[0])),ExpoMatix[0]) #ajustar valores de x y yRuido a la funcion "func"
-        # plt.plot(range(0,len(ExpoMatix[0])), func(range(0,len(ExpoMatix[0])), popt[0], popt[1]),'r-', label='fit: m=%5.3f, b=%5.3f' % tuple(popt))
+        popt, pcov = curve_fit(func, range(0, len(ExpoMatix[0])),ExpoMatix[0]) #ajustar valores de x y yRuido a la funcion "func"
+        plt.plot(range(0,len(ExpoMatix[0])), func(range(0,len(ExpoMatix[0])), popt[0], popt[1]),'r-', label='fit: m=%5.3f, b=%5.3f' % tuple(popt))
         popt, pcov = curve_fit(func, range(0, len(ExpoMatix[:,0])),ExpoMatix[:,0])
-        plt.plot(range(0,len(ExpoMatix[:,0])), func(range(0,len(ExpoMatix[:,0])), popt[0], popt[1]),'r-', label='fit: m=%5.3f, b=%5.3f' % tuple(popt))
+        plt.plot(range(0,len(ExpoMatix[:,0])), func(range(0,len(ExpoMatix[:,0])), popt[0], popt[1]),'b-', label='fit by column: m=%5.3f, b=%5.3f' % tuple(popt))
         plt.legend()
         plt.show()
     
