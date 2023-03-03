@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "hepeaks_procfits.C": "cpp",
+        "noisedc.C": "cpp"
+    }
+}
