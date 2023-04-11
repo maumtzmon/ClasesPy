@@ -1,9 +1,13 @@
 #####
 #
-#Program to mask events and calculate Spurious charge due the
-#Temperature
+#   Program to mask events and calculate Spurious charge due the
+#   Temperature
+#
+#   Its Necesary to indicate a path with some images toked at different temperatures
+#   All the plots are commented to do the math quickly
 #
 #
+#   Status Ok-Development
 #####
 
 from functions_py import *

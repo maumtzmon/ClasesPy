@@ -6,8 +6,9 @@ from  fits import histogram
 
 
 
-#file="/home/maumtz/datosFits/testMITLL/16NOV22/proc_skp_module26_MITLL01_externalVr_Vtest_T170_testLeakage__NSAMP1_NROW650_NCOL700_EXPOSURE0_NBINROW1_NBINCOL1_img34.fits"
-file="/home/maumtz/datosFits/testMITLL/16NOV22/proc_skp_module26_MITLL01_externalVr_Vtest_T170_testLeakage__NSAMP324_NROW50_NCOL700_EXPOSURE0_NBINROW1_NBINCOL1_img33.fits"
+file="/home/oem/datosFits/MicrochipTest_Marzo/datos/22MAR23/proc_skp_m-009_microchip_V_v2_T_170__seq__NSAMP_1_NROW_650_NCOL_700_EXPOSURE_0_NBINROW_1_NBINCOL_1_img_109.fits"
+
+#file="/home/maumtz/datosFits/testMITLL/16NOV22/proc_skp_module26_MITLL01_externalVr_Vtest_T170_testLeakage__NSAMP324_NROW50_NCOL700_EXPOSURE0_NBINROW1_NBINCOL1_img33.fits"
 
 class argv:
     def __init__(self,histogram='',x=[100, 200, 300, 400], y=[100, 200, 300, 400],baseline=False, charge=None, dCurrent=None, eventDet=None, ext=None, pdf=True,):
