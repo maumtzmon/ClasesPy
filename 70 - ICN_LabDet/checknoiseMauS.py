@@ -183,7 +183,7 @@ if len(sys.argv) > 1:
 	noises_frame=pd.DataFrame(list_Noises, columns=['Noise',' ',' ',' '])
 	total_frame=pd.concat([names_frame,stdev_frame,noises_frame],axis=1)
 
-	min_Noise_Module1=total_frame.sort_values('Noise')
+	min_Noise_Module1=total_frame.sort_values("Image ("+Tempt[6]+")")#'Noise')
 
 	print(min_Noise_Module1)
 	# print(datos_imgDict)
