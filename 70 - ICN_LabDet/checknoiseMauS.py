@@ -42,6 +42,7 @@ if len(sys.argv) > 1:
 	list_StandarDev=[]
 	list_Noises=[]
 	list_Names=[]
+	nSamp=[]
 
 #	xmin_fit, xmax_fit = -200, 200		# Variables to perform the fit
 	expgain = [191, 191, 193, 158]
@@ -70,6 +71,7 @@ if len(sys.argv) > 1:
 
 		var=[]
 		var_fit=[]
+	
 
 #		for i in range(0,1):
 		for i in range(0, len(hdul)):
@@ -131,6 +133,7 @@ if len(sys.argv) > 1:
 		list_StandarDev.append(var)
 		list_Noises.append(var_fit)
 		list_Names.append(stringval)
+		nSamp.append(int(header['NSAMP']))
 
 		# Añade elementos al diccionario
 		imgDict.setdefault('img'+stringval,{'stdv':[round(var[0],5), round(var[1],5), round(var[2],5), round(var[3],5)],
@@ -176,12 +179,27 @@ if len(sys.argv) > 1:
 	plt.show()				# Show plot
 
 	#DataFrame 
+
 	ImgName=str(files)
 	Tempt=ImgName.split('_')
-	names_frame=pd.DataFrame(list_Names, columns=["Image ("+Tempt[6]+")"])
+	names_frame=pd.DataFrame(list_Names, columns=["Image "])
+	nSamp_frame=pd.DataFrame(nSamp, columns=["nSamp"])
 	stdev_frame=pd.DataFrame(list_StandarDev, columns=['Std.vDev.',' ',' ',' '])
-	noises_frame=pd.DataFrame(list_Noises, columns=['Noise',' ',' ',' '])
-	total_frame=pd.concat([names_frame,stdev_frame,noises_frame],axis=1)
+	noises_frame=pd.DataFrame(list_Noises, columns=['Noise ext1','Noise ext2','Noise ext3','Noise ext4'])
+	total_frame=pd.concat([names_frame, nSamp_frame, stdev_frame,noises_frame],axis=1)
+
+	min_Noise_Module1=total_frame.sort_values('nSamp')
+
+	fig_all, axes= plt.subplots(nrows=1,ncols=4, figsize=(20,5))
+
+	total_frame.plot(kind='scatter',x='nSamp',y='Noise ext1', ax=axes[0])
+	total_frame.plot(kind='scatter',x='nSamp',y='Noise ext2', ax=axes[1])
+	total_frame.plot(kind='scatter',x='nSamp',y='Noise ext3', ax=axes[2])
+	total_frame.plot(kind='scatter',x='nSamp',y='Noise ext4', ax=axes[3])
+	
+
+	plt.show()
+
 
 	min_Noise_Module1=total_frame.sort_values("Image ("+Tempt[6]+")")#'Noise')
 

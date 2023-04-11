@@ -49,7 +49,7 @@ plt.rcParams.update({
 # '/home/oem/datosFits/testMITLL/16FEB23/spurious/proc_skp_module24_MITLL01_externalVr-4_Vv2_T160__NSAMP324_NROW650_NCOL700_EXPOSURE0_NBINROW1_NBINCOL1_img126.fits',
 # '/home/oem/datosFits/testMITLL/16FEB23/spurious/proc_skp_module24_MITLL01_externalVr-4_Vv2_T170__NSAMP324_NROW650_NCOL700_EXPOSURE0_NBINROW1_NBINCOL1_img103.fits']
 
-path='/home/oem/datosFits/testMITLL/spuriousCharge/01Mar23/'
+path='/home/oem/datosFits/testMITLL/01MAR23/'
 #path='/home/oem/datosFits/testMITLL/spuriousCharge/15FEB23/85/'
 lista_de_archivos=listdir(path)
 file_dict={}
@@ -388,7 +388,7 @@ for imagen in lista_de_archivos:
     # plt.show()
 print('\n\n')
     
-pd.DataFrame.from_dict(file_dict,orient='index').to_csv('datos_mean_28Feb.csv',sep=',')
+pd.DataFrame.from_dict(file_dict,orient='index').to_csv('/home/oem/datosFits/testMITLL/01MAR23/datos_mean_28Feb.csv',sep=',')
 
 
 
