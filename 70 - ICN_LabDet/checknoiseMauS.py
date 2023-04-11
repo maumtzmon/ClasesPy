@@ -201,6 +201,7 @@ if len(sys.argv) > 1:
 	plt.show()
 
 
+	min_Noise_Module1=total_frame.sort_values("Image ("+Tempt[6]+")")#'Noise')
 
 	print(min_Noise_Module1)
 	# print(datos_imgDict)

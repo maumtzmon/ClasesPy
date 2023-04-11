@@ -1,3 +1,5 @@
+#!/usr/bin/python3.10
+
 import os
 import glob
 import sys
@@ -51,7 +53,7 @@ def plotData(argv):
 					offset = bin_edges[np.argmax(hist)]
 
 					# Plot one histogram per extension for ALL images
-					axs_all[figctr].hist(data[mask].flatten(), range=[offset-500, offset+1500], bins=100, histtype='step', label=hlabel)	# Plot histogram of pixel values
+					axs_all[figctr].hist(data[mask].flatten(), range=[-3000, offset+3000], bins=100, histtype='step', label=hlabel)	# Plot histogram of pixel values
 
 					axs_all[figctr].set_title('ext '+str(figctr+1))
 
@@ -59,7 +61,7 @@ def plotData(argv):
 
 					if (len(files)>1):
 						# Plot one histogram per extension for EACH image
-						axs[j, figctr].hist(data[mask].flatten(), range=[offset-500, offset+7500], bins=500, histtype='step', label='ext '+str(i), log=True)	# Plot histogram of pixel values
+						axs[j, figctr].hist(data[mask].flatten(), range=[offset-3000, offset+7500], bins=500, histtype='step', label='ext '+str(i), log=True)	# Plot histogram of pixel values
 
 						axs[j, 0].set_title(hlabel, loc='left', pad=-1)
 
