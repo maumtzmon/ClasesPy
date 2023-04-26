@@ -22,11 +22,11 @@ def plotData(argv):
 		overscan_mask = np.s_[:, 538:]		# 538 <= x
 		mask=np.s_[2:, 10:538]			# Area where variable will be computed
 
-		fig_all, axs_all = plt.subplots(1, 4, figsize=(20, 5))		# Create figures
+		fig_all, axs_all = plt.subplots(1, 4, figsize=(20, 5)) #, sharey=True)		# Create figures
 	#	fig_all.tight_layout()
 
 		if (len(files)>1):
-			fig, axs = plt.subplots(len(files), 4, figsize=(15,10))
+			fig, axs = plt.subplots(len(files), 4, figsize=(15,10)) #, sharey=True)
 			fig.tight_layout()
 
 		for image in files:
@@ -53,7 +53,7 @@ def plotData(argv):
 					offset = bin_edges[np.argmax(hist)]
 
 					# Plot one histogram per extension for ALL images
-					axs_all[figctr].hist(data[mask].flatten(), range=[-3000, offset+3000], bins=100, histtype='step', label=hlabel)	# Plot histogram of pixel values
+					axs_all[figctr].hist(data[mask].flatten(), range=[offset-3000, offset+3000], bins=100, histtype='step', label=hlabel)	# Plot histogram of pixel values
 
 					axs_all[figctr].set_title('ext '+str(figctr+1))
 

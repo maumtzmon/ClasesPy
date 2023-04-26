@@ -42,15 +42,15 @@ if len(sys.argv) > 1:
 	active_mask = np.s_[:, 9:538]		#   9 <= x < 538
 	overscan_mask = np.s_[:, 538:]		# 538 <= x
 
-	mask=np.s_[:, 538:700]			# Area where variable will be computed
-
+	#mask=np.s_[:, 538:700] #OverScan			# Area where variable will be computed
+	mask=np.s_[2:, 10:538] 	#active Area
 	list_var=[]				# List to store the computed variable
 
 	expgain = [201.8325949210918, 194.70825464645284, 202.97945260519987, 193.2145155088731]	# Expected gain; if only fitting 1 peak, noise is divided by this number
-	numpeaks = 2				# Number of peaks to fit
+	numpeaks = 3				# Number of peaks to fit
 
 	varsplot = ["Constant (ADU)", "Offset (ADU)", "Noise (e-)", "Gain (ADU/e-)", "SER (e-/pix)"]	# Variables that can be chosen to be plotted
-	parplot = 3				# From varsplot, index of parameter to plot; for example if you want to plot Noise (e-), varsplot=3
+	parplot = 3 			# From varsplot, index of parameter to plot; for example if you want to plot Noise (e-), varsplot=3
 	string=''				# Variable to be the x axis, as shown in the header of the image
 
 #	fig_all, axs_all = plt.subplots(1, 4, figsize=(20, 5))		# Define figure to stack histograms of all images
@@ -65,9 +65,10 @@ if len(sys.argv) > 1:
 	deltaT=[]
 	deltaSW=[]
 	RunID=[]
+	vFile = []
 
 	for image in files:
-		fig_all, axs_all = plt.subplots(1, 4, figsize=(20, 5), sharey=True)	# Define figure to stack histogram of each image
+		fig_all, axs_all = plt.subplots(1, 4, figsize=(20, 5))	# Define figure to stack histogram of each image
 #		fig_all.tight_layout()
 
 		hdul=fits.open(image)
@@ -91,10 +92,10 @@ if len(sys.argv) > 1:
 
 			if data is not None:								# Check if data is not empty
 #				data = data - np.median(data, axis=0, keepdims=True)			# Subtract median per column
-				data = data - np.median(data[overscan_mask], axis=1, keepdims=True)	# Subtract OS median per row (use when proc*fits have no baseline substracted)
+				#data = data - np.median(data[active_mask], axis=1, keepdims=True)	# Subtract OS median per row (use when proc*fits have no baseline substracted)
 
 				# Extract info from header
-				stringval=header["RUNID"]
+				stringval=image.split('Vv')[1].split('_')[0]#header["RUNID"]
 				#stringval=float(header["H1AH"])-float(header["H1AL"])
 				nsamp=float(header['NSAMP'])
 
@@ -105,7 +106,7 @@ if len(sys.argv) > 1:
 				hist, bin_edges = np.histogram(data[mask].flatten(), bins=1000000)
 				offset = bin_edges[np.argmax(hist)]
 #				print(offset)
-#				data = data-offset		# Subtract offset from data
+				#data = data-offset		# Subtract offset from data (offset artificial)
 #				offset = 0			# Offset to plot
 				
 				bin_heights, bin_borders, _ = axs_all[figctr].hist(data[mask].flatten(), range=[offset-3000, offset+3000], bins=200, histtype='step', label=hlabel)	# Plot histogram
@@ -172,7 +173,7 @@ if len(sys.argv) > 1:
 
 				figctr=figctr+1
 
-#		plt.legend()
+		plt.legend()
 #		plt.show()			# Show histogram per image
 		
 
@@ -190,13 +191,14 @@ if len(sys.argv) > 1:
 		deltaT.append(float(header["TGAH"])-float(header["TGAL"]))
 		deltaSW.append(float(header["SWAH"])-float(header["SWAL"]))
 		RunID.append(float(header["RUNID"]))
+		vFile.append(float(image.split('Vv')[1].split('_')[0]))
 
 	arr_var=np.array(list_var)
 	arr_var=arr_var[np.argsort(arr_var[:, 0])]	# Sort array by values on first column
 #	print(arr_var)
 
-	fig_all.legend(handles_all, labels_all, loc='upper right')
-#	plt.legend()
+	#fig_all.legend(handles_all, labels_all, loc='upper right')
+	#plt.legend()
 	plt.show()
 
 	# PLOT
@@ -214,19 +216,20 @@ if len(sys.argv) > 1:
 #		axs_var[k].set_yscale('log')
 #		axs_var[k].set_ylim(ymin=1)
 
-	axs_var[1][0].plot(RunID,deltaV,".k")
+	axis=vFile
+	axs_var[1][0].plot(axis,deltaV,".k")
 	axs_var[1][0].set_title("Delta V")
 	axs_var[1][0].set_ylabel("Volts")
-	axs_var[1][0].set_xlabel("RunID")
-	axs_var[1][1].plot(RunID,deltaT,".k")
+	axs_var[1][0].set_xlabel("vFile")
+	axs_var[1][1].plot(axis,deltaT,".k")
 	axs_var[1][1].set_title("Delta T")
-	axs_var[1][1].set_xlabel("RunID")
-	axs_var[1][2].plot(RunID,deltaH,".k")
+	axs_var[1][1].set_xlabel("vFile")
+	axs_var[1][2].plot(axis,deltaH,".k")
 	axs_var[1][2].set_title("Delta H")
-	axs_var[1][2].set_xlabel("RunID")
-	axs_var[1][3].plot(RunID,deltaSW,".k")
+	axs_var[1][2].set_xlabel("vFile")
+	axs_var[1][3].plot(axis,deltaSW,".k")
 	axs_var[1][3].set_title("Delta SW")
-	axs_var[1][3].set_xlabel("RunID")
+	axs_var[1][3].set_xlabel("vFile")
 
 #	plt.savefig(dirname+"/checknoise.png")	# Save plot
 	plt.show()				# Show plot
