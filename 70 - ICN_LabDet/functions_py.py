@@ -13,6 +13,7 @@ from dateutil.parser import parse
 from scipy.stats import poisson, norm
 import datetime
 from matplotlib import colors
+import matplotlib.pyplot as plt
 import argparse
 import sys
 import warnings
@@ -463,7 +464,79 @@ def exposureFactor(path):
     return HEF, VEF
 
 
+def voltageDictfromFile(vFile='/home/oem/datosFits/MicrochipTest_Marzo/datos/05MAY23/vFiles/voltage_skp_lta_v60_microchip.sh'):
+    File=vFile.split('/')[-1]
+    voltageDict={}
+    swingDict={}
+    with open(vFile, 'r') as VoltageFile:
+        varlist=[]
+        for line in VoltageFile:
+            #print(line, end='\r')
+            if '='in line:
+                varlist.append(float(line.split('=')[1]))
+            if len(varlist)==2:
+                voltageDict[line.split('=')[0][0]]=varlist
+                varlist=[]
+    vr=-7
+    voltageDict['r']=[vr,vr-0.1] #voltaje del nodo de lectura, esta en la seccion del Bias como vr (aumento .01 solo para el plot)
+    print(str(voltageDict))
 
+    cell_text = []
+    return voltageDict, File
+
+def voltageDictfromFitsFile(fitsImage=None):
+    vr=-7
+    voltageDict={}
+    #{'v': [2.5, 0.0], 't': [2.0, -0.5], 'h': [1.5, -1.0], 's': [1.0, -10.0], 'o': [-2.0, -8.0], 'r': [-7, -7.1], 'd': [-1.0, -10.0]}
+
+    with fits.open(fitsImage) as header:
+        header=header[0].header
+        voltageDict[header._cards[29].rawkeyword[0]]=[float(header._cards[29].rawvalue),float(header._cards[30].rawvalue)] #Vl value #Vh value
+        voltageDict[header._cards[65].rawkeyword[0]]=[float(header._cards[65].rawvalue),float(header._cards[66].rawvalue)]#Th value
+        voltageDict[header._cards[39].rawkeyword[0]]=[float(header._cards[39].rawvalue),float(header._cards[40].rawvalue)]#Tl value
+        voltageDict[header._cards[49].rawkeyword[0]]=[float(header._cards[49].rawvalue),float(header._cards[50].rawvalue)]
+        voltageDict[header._cards[57].rawkeyword[0]]=[float(header._cards[57].rawvalue),float(header._cards[58].rawvalue)]
+        #voltageDict[header._cards[53].rawkeyword]=[float(header._cards[53].rawvalue),float(header._cards[54].rawvalue)]
+        voltageDict['r']=[vr,vr-0.1] #voltaje del nodo de lectura, esta en la seccion del Bias como vr (aumento .01 solo para el plot)
+        voltageDict[header._cards[61].rawkeyword[0]]=[float(header._cards[61].rawvalue),float(header._cards[62].rawvalue)]
+        
+
+
+    
+    #voltageDict['r']=[vr,vr-0.1] #voltaje del nodo de lectura, esta en la seccion del Bias como vr (aumento .01 solo para el plot)
+    #print(str(voltageDict))
+    return voltageDict, fitsImage.split('/')[-1]
+
+def outputStageTiming(voltageDict, fileName):
+    
+    fig, ax = plt.subplots()
+
+    for key in voltageDict:
+        x=0
+        if key.startswith('v') or key.startswith('t') or key.startswith('h') or key.startswith('s') or key.startswith('o') or key.startswith('d') or key.startswith('V') or key.startswith('T') or key.startswith('H') or key.startswith('S') or key.startswith('O') or key.startswith('r') or key.startswith('D'):
+            
+            #   'key' : [high=0, low=1]
+            #high states
+            x+=1
+            if voltageDict[key][0]>0:   
+                ax.annotate(voltageDict[key][0],(key, float(voltageDict[key][0]+0.05)))
+                ax.bar(key,voltageDict[key][0],color='black',label=key)
+                if voltageDict[key][1]>0:
+                    ax.bar(key,voltageDict[key][1], color='white',label=key)
+                else:
+                    ax.bar(key,voltageDict[key][1], color='black',label=key)          
+            elif voltageDict[key][1]<0:
+                ax.annotate(voltageDict[key][0],(key, float(voltageDict[key][0]+0.05)))
+                ax.bar(key,voltageDict[key][1],color='black',label=key)
+                if voltageDict[key][0]<0:
+                    ax.bar(key,voltageDict[key][0], color='white',label=key)
+                else:
+                    ax.bar(key,voltageDict[key][1], color='black',label=key)
+           
+            if key != 'r':
+                ax.annotate(voltageDict[key][1],(key, float(voltageDict[key][1]-.5))) 
+            
+    plt.title(fileName)
 
 
 

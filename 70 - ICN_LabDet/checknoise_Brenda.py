@@ -11,6 +11,7 @@ from astropy.stats import median_absolute_deviation as mad
 from astropy.io import fits
 from matplotlib import pyplot as plt
 from scipy.optimize import curve_fit
+import pandas as pd
 
 def gaussian(x, norm, mean, sigma):
 	return norm * np.exp(-((x - mean)**2 / (2 * sigma**2)))
@@ -46,17 +47,17 @@ if len(sys.argv) > 1:
 	mask=np.s_[2:, 10:538] 	#active Area
 	list_var=[]				# List to store the computed variable
 
-	expgain = [201.8325949210918, 194.70825464645284, 202.97945260519987, 193.2145155088731]	# Expected gain; if only fitting 1 peak, noise is divided by this number
-	numpeaks = 3				# Number of peaks to fit
+	expgain = [227.7013, 220.4891, 154.6271, 197.7721]#201.8325949210918, 194.70825464645284, 202.97945260519987, 193.2145155088731]	# Expected gain; if only fitting 1 peak, noise is divided by this number
+	numpeaks = 1				# Number of peaks to fit
 
 	varsplot = ["Constant (ADU)", "Offset (ADU)", "Noise (e-)", "Gain (ADU/e-)", "SER (e-/pix)"]	# Variables that can be chosen to be plotted
-	parplot = 3 			# From varsplot, index of parameter to plot; for example if you want to plot Noise (e-), varsplot=3
+	parplot =3			# From varsplot, index of parameter to plot; for example if you want to plot Noise (e-), varsplot=3
 	string=''				# Variable to be the x axis, as shown in the header of the image
 
 #	fig_all, axs_all = plt.subplots(1, 4, figsize=(20, 5))		# Define figure to stack histograms of all images
 #	fig_all.tight_layout()
 
-	# Open datafile and write header
+	# Open datafile and write 
 #	datafile=open(dirname+"/noisevspsamp.txt","a+")
 #	datafile.write("#PSAMP\tNoise_ext1\tNoise_ext2\tNoise_ext3\tNoise_ext4\n")
 
@@ -66,6 +67,7 @@ if len(sys.argv) > 1:
 	deltaSW=[]
 	RunID=[]
 	vFile = []
+	valuesDict = {}
 
 	for image in files:
 		fig_all, axs_all = plt.subplots(1, 4, figsize=(20, 5))	# Define figure to stack histogram of each image
@@ -95,7 +97,9 @@ if len(sys.argv) > 1:
 				#data = data - np.median(data[active_mask], axis=1, keepdims=True)	# Subtract OS median per row (use when proc*fits have no baseline substracted)
 
 				# Extract info from header
-				stringval=image.split('Vv')[1].split('_')[0]#header["RUNID"]
+				####   X axis Variable   ####
+				stringval= header['RUNID']  
+				#stringval=image.split('Vv')[1].split('_')[0]#header["RUNID"]
 				#stringval=float(header["H1AH"])-float(header["H1AL"])
 				nsamp=float(header['NSAMP'])
 
@@ -181,7 +185,11 @@ if len(sys.argv) > 1:
 		print("\nNoise in overscan from stddev [ADU]:")
 		print(var[0], var[1], var[2], var[3])
 		print(varsplot[parplot-1]+" in selected area:")
-		print(var_fit[0], var_fit[1], var_fit[2], var_fit[3])
+		print(var_fit[0], var_fit[1], var_fit[2], var_fit[3]) #add to Dataframe
+
+		valuesDict[header['RUNID']]=[header['NSAMP'],round(var_fit[0], 4), round(var_fit[1], 4), round(var_fit[2],4), round(var_fit[3],4)]
+
+		
 
 #		list_var.append([float(stringval), var[0], var[1], var[2], var[3]])
 		list_var.append([float(stringval), var_fit[0], var_fit[1], var_fit[2], var_fit[3]])		# To use the var obtained from the gaussian fit
@@ -190,15 +198,27 @@ if len(sys.argv) > 1:
 		deltaV.append(float(header["V1AH"])-float(header["V1AL"]))
 		deltaT.append(float(header["TGAH"])-float(header["TGAL"]))
 		deltaSW.append(float(header["SWAH"])-float(header["SWAL"]))
-		RunID.append(float(header["RUNID"]))
-		vFile.append(float(image.split('Vv')[1].split('_')[0]))
+		try:
+			RunID.append(float(header["RUNID"]))
+		except:
+			RunID.append(float(hlabel.split("_")[-1].split(".")[0]))
+		#vFile.append(float(image.split('Vv')[1].split('_')[0]))
 
+		if len(files) > 1:
+			dataframe=pd.DataFrame.from_dict(valuesDict, columns=['nSamp','Ext 0', '1', '2', '3'], orient='index')
 	arr_var=np.array(list_var)
 	arr_var=arr_var[np.argsort(arr_var[:, 0])]	# Sort array by values on first column
 #	print(arr_var)
 
 	#fig_all.legend(handles_all, labels_all, loc='upper right')
 	#plt.legend()
+	if len(files)>1:
+		print('\n')
+		print(varsplot[parplot-1]+" for every image in selected area:")
+		print(dataframe.sort_index())
+		
+
+
 	plt.show()
 
 	# PLOT
@@ -216,23 +236,27 @@ if len(sys.argv) > 1:
 #		axs_var[k].set_yscale('log')
 #		axs_var[k].set_ylim(ymin=1)
 
-	axis=vFile
+	#axis=vFile
+	axis=RunID	
 	axs_var[1][0].plot(axis,deltaV,".k")
 	axs_var[1][0].set_title("Delta V")
 	axs_var[1][0].set_ylabel("Volts")
-	axs_var[1][0].set_xlabel("vFile")
+	axs_var[1][0].set_xlabel("NSAMP")
 	axs_var[1][1].plot(axis,deltaT,".k")
 	axs_var[1][1].set_title("Delta T")
-	axs_var[1][1].set_xlabel("vFile")
+	axs_var[1][1].set_xlabel("NSAMP")
 	axs_var[1][2].plot(axis,deltaH,".k")
 	axs_var[1][2].set_title("Delta H")
-	axs_var[1][2].set_xlabel("vFile")
+	axs_var[1][2].set_xlabel("NSAMP")
 	axs_var[1][3].plot(axis,deltaSW,".k")
 	axs_var[1][3].set_title("Delta SW")
-	axs_var[1][3].set_xlabel("vFile")
+	axs_var[1][3].set_xlabel("NSAMP")
 
+	
 #	plt.savefig(dirname+"/checknoise.png")	# Save plot
 	plt.show()				# Show plot
+	
+	
 
 	# TXT FILE
 #	np.savetxt(datafile, arr_var, fmt="%s")	# Save array to datafile
