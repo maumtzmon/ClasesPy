@@ -43,15 +43,15 @@ if len(sys.argv) > 1:
 	active_mask = np.s_[:, 9:538]		#   9 <= x < 538
 	overscan_mask = np.s_[:, 538:]		# 538 <= x
 
-	#mask=np.s_[:, 538:700] #OverScan			# Area where variable will be computed
-	mask=np.s_[2:, 10:538] 	#active Area
+	mask=np.s_[:, 538:700] #OverScan			# Area where variable will be computed
+	#mask=np.s_[2:, 10:538] 	#active Area
 	list_var=[]				# List to store the computed variable
 
 	expgain = [227.7013, 220.4891, 154.6271, 197.7721]#201.8325949210918, 194.70825464645284, 202.97945260519987, 193.2145155088731]	# Expected gain; if only fitting 1 peak, noise is divided by this number
-	numpeaks = 3				# Number of peaks to fit
+	numpeaks = 2				# Number of peaks to fit
 
 	varsplot = ["Constant (ADU)", "Offset (ADU)", "Noise (e-)", "Gain (ADU/e-)", "SER (e-/pix)"]	# Variables that can be chosen to be plotted
-	parplot =3			# From varsplot, index of parameter to plot; for example if you want to plot Noise (e-), varsplot=3
+	parplot = 5			# From varsplot, index of parameter to plot; for example if you want to plot Noise (e-), varsplot=3
 	string=''				# Variable to be the x axis, as shown in the header of the image
 
 #	fig_all, axs_all = plt.subplots(1, 4, figsize=(20, 5))		# Define figure to stack histograms of all images
@@ -187,7 +187,7 @@ if len(sys.argv) > 1:
 		print(varsplot[parplot-1]+" in selected area:")
 		print(var_fit[0], var_fit[1], var_fit[2], var_fit[3]) #add to Dataframe
 
-		valuesDict[header['RUNID']]=[header['NSAMP'],round(var_fit[0], 4), round(var_fit[1], 4), round(var_fit[2],4), round(var_fit[3],4)]
+		valuesDict[header['RUNID']]=[int(header['NSAMP']),round(var_fit[0], 4), round(var_fit[1], 4), round(var_fit[2],4), round(var_fit[3],4)]
 
 		
 
@@ -216,6 +216,7 @@ if len(sys.argv) > 1:
 		print('\n')
 		print(varsplot[parplot-1]+" for every image in selected area:")
 		print(dataframe.sort_index())
+		# print(dataframe.sort_values(by='nSamp'))
 		
 		
 
