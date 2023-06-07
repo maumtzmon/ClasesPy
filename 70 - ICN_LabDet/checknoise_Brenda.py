@@ -48,7 +48,7 @@ if len(sys.argv) > 1:
 	list_var=[]				# List to store the computed variable
 
 	expgain = [227.7013, 220.4891, 154.6271, 197.7721]#201.8325949210918, 194.70825464645284, 202.97945260519987, 193.2145155088731]	# Expected gain; if only fitting 1 peak, noise is divided by this number
-	numpeaks = 1				# Number of peaks to fit
+	numpeaks = 3				# Number of peaks to fit
 
 	varsplot = ["Constant (ADU)", "Offset (ADU)", "Noise (e-)", "Gain (ADU/e-)", "SER (e-/pix)"]	# Variables that can be chosen to be plotted
 	parplot =3			# From varsplot, index of parameter to plot; for example if you want to plot Noise (e-), varsplot=3
@@ -216,6 +216,7 @@ if len(sys.argv) > 1:
 		print('\n')
 		print(varsplot[parplot-1]+" for every image in selected area:")
 		print(dataframe.sort_index())
+		
 		
 
 
