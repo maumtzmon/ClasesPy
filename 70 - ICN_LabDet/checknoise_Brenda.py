@@ -48,10 +48,10 @@ if len(sys.argv) > 1:
 	list_var=[]				# List to store the computed variable
 
 	expgain = [227.7013, 220.4891, 154.6271, 197.7721]#201.8325949210918, 194.70825464645284, 202.97945260519987, 193.2145155088731]	# Expected gain; if only fitting 1 peak, noise is divided by this number
-	numpeaks = 2				# Number of peaks to fit
+	numpeaks = 1				# Number of peaks to fit
 
 	varsplot = ["Constant (ADU)", "Offset (ADU)", "Noise (e-)", "Gain (ADU/e-)", "SER (e-/pix)"]	# Variables that can be chosen to be plotted
-	parplot = 5			# From varsplot, index of parameter to plot; for example if you want to plot Noise (e-), varsplot=3
+	parplot = 3			# From varsplot, index of parameter to plot; for example if you want to plot Noise (e-), varsplot=3
 	string=''				# Variable to be the x axis, as shown in the header of the image
 
 #	fig_all, axs_all = plt.subplots(1, 4, figsize=(20, 5))		# Define figure to stack histograms of all images
@@ -98,13 +98,13 @@ if len(sys.argv) > 1:
 
 				# Extract info from header
 				####   X axis Variable   ####
-				stringval= header['RUNID']  
-				#stringval=image.split('Vv')[1].split('_')[0]#header["RUNID"]
+				#stringval= header['RUNID']  
+				stringval=image.split('sinit_')[1].split('_')[0]#header["RUNID"]
 				#stringval=float(header["H1AH"])-float(header["H1AL"])
 				nsamp=float(header['NSAMP'])
 
 #				hlabel = string+" "+stringval			# Define label of histogram
-				hlabel = img
+				hlabel = image
 
 				#Plot histogram of data to obtain offset
 				hist, bin_edges = np.histogram(data[mask].flatten(), bins=1000000)
@@ -177,8 +177,9 @@ if len(sys.argv) > 1:
 
 				figctr=figctr+1
 
-		plt.legend()
-#		plt.show()			# Show histogram per image
+		fig_all.suptitle(image)
+		plt.close(fig_all)
+		#plt.show()			# Show histogram per image
 		
 
 		# STORE COMPUTED VARIABLE
@@ -187,7 +188,8 @@ if len(sys.argv) > 1:
 		print(varsplot[parplot-1]+" in selected area:")
 		print(var_fit[0], var_fit[1], var_fit[2], var_fit[3]) #add to Dataframe
 
-		valuesDict[header['RUNID']]=[int(header['NSAMP']),round(var_fit[0], 4), round(var_fit[1], 4), round(var_fit[2],4), round(var_fit[3],4)]
+		#valuesDict[header['RUNID']]=[int(header['NSAMP']),round(var_fit[0], 4), round(var_fit[1], 4), round(var_fit[2],4), round(var_fit[3],4)]
+		valuesDict[header['RUNID']]=[int(stringval),round(var_fit[0], 4), round(var_fit[1], 4), round(var_fit[2],4), round(var_fit[3],4)]
 
 		
 
@@ -200,12 +202,13 @@ if len(sys.argv) > 1:
 		deltaSW.append(float(header["SWAH"])-float(header["SWAL"]))
 		try:
 			RunID.append(float(header["RUNID"]))
+			
 		except:
-			RunID.append(float(hlabel.split("_")[-1].split(".")[0]))
-		#vFile.append(float(image.split('Vv')[1].split('_')[0]))
+			#RunID.append(float(hlabel.split("_")[-1].split(".")[0]))
+			vFile.append(float(image.split('sinit_')[1].split('_')[0]))
 
 		if len(files) > 1:
-			dataframe=pd.DataFrame.from_dict(valuesDict, columns=['nSamp','Ext 0', '1', '2', '3'], orient='index')
+			dataframe=pd.DataFrame.from_dict(valuesDict, columns=['sinit','Ext 0', '1', '2', '3'], orient='index')
 	arr_var=np.array(list_var)
 	arr_var=arr_var[np.argsort(arr_var[:, 0])]	# Sort array by values on first column
 #	print(arr_var)
@@ -215,13 +218,14 @@ if len(sys.argv) > 1:
 	if len(files)>1:
 		print('\n')
 		print(varsplot[parplot-1]+" for every image in selected area:")
-		print(dataframe.sort_index())
-		# print(dataframe.sort_values(by='nSamp'))
+		#print(dataframe.sort_index())
+		print(dataframe.sort_values(by='sinit'))
 		
 		
-
+	
 
 	plt.show()
+	
 
 	# PLOT
 	fig_var, axs_var = plt.subplots(2, 4, figsize=(20, 5))
