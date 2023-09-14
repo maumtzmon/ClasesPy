@@ -21,6 +21,7 @@ def sqrt(x, sigma0):
 
 def varsort(item):
 	return int(item.split("_NSAMP_")[1].split("_")[0])
+	
 
 def doublegaus(x, norm, offset, noise, gain, mu):
 	return (1.0-mu)*norm*np.exp(-((x-offset)**2/(2*(gain*noise)**2))) + mu*norm*np.exp(-((x-offset-gain)**2/(2*(gain*noise)**2)))
@@ -30,8 +31,8 @@ def sumgaus(x, norm, offset, noise, gain, mu, npeaks):
 
 if len(sys.argv) > 1:
 	files = sys.argv[1:]
-	files.sort(key=varsort)			# Sort files by key
-#	files.sort(key=os.path.getmtime)
+	#files.sort(key=varsort)			# Sort files by key
+	files.sort(key=os.path.getmtime)
 
 	dirname=os.path.dirname(files[0])	# Get dirname of first element in files
 
@@ -99,7 +100,7 @@ if len(sys.argv) > 1:
 				# Extract info from header
 				####   X axis Variable   ####
 				#stringval= header['RUNID']  
-				stringval=image.split('sinit_')[1].split('_')[0]#header["RUNID"]
+				stringval=image.split('delay_')[1].split('_')[0]#   header["RUNID"]#
 				#stringval=float(header["H1AH"])-float(header["H1AL"])
 				nsamp=float(header['NSAMP'])
 
@@ -138,7 +139,9 @@ if len(sys.argv) > 1:
 					bin_centers_peak = bin_centers[(bin_centers>xmin_fit) & (bin_centers<xmax_fit)]
 
 					try:	# Try to fit, pass if error
-						popt, pcov = curve_fit(gaussian, bin_centers_peak, bin_heights_peak, p0=[np.max(bin_heights_peak), bin_centers_peak[np.argmax(bin_heights_peak)], 0.5*expgain[figctr]], maxfev=100000, bounds=([0, xmin_fit, 0.01*expgain[figctr]], [1.5*np.max(bin_heights_peak), xmax_fit, 5*expgain[figctr]]))	# Fit histogram with gaussian
+						#popt, pcov = curve_fit(gaussian, bin_centers_peak, bin_heights_peak, p0=[np.max(bin_heights_peak), bin_centers_peak[np.argmax(bin_heights_peak)], 0.5*expgain[figctr]], maxfev=100000, bounds=([0, xmin_fit, 0.01*expgain[figctr]], [1.5*np.max(bin_heights_peak), xmax_fit, 5*expgain[figctr]]))	# Fit histogram with gaussian
+						nsampGain=int(stringval)
+						popt, pcov = curve_fit(gaussian, bin_centers_peak, bin_heights_peak, p0=[np.max(bin_heights_peak), bin_centers_peak[np.argmax(bin_heights_peak)], 0.5*nsampGain], maxfev=100000, bounds=([0, xmin_fit, 0.01*nsampGain], [1.5*np.max(bin_heights_peak), xmax_fit, 5*nsampGain]))	# Fit histogram with gaussian
 #						print(popt)
 						axs_all[figctr].plot(bin_centers_peak, gaussian(bin_centers_peak, *popt))			# Plot gaussian fit
 						par_fit = np.append(aux_arr, popt)
@@ -163,7 +166,7 @@ if len(sys.argv) > 1:
 					print("Successful fit :)"); print("Extracting "+varsplot[parplot-1])
 				except:
 					try:	# Enters here if numpeaks=1, try to extract parameters from gaussian fit to 0e- peak
-						norm = par_fit[0]; offset = par_fit[1]; noise = par_fit[2]/expgain[figctr];
+						norm = par_fit[0]; offset = par_fit[1]; noise = par_fit[2];#/expgain[figctr];
 						if parplot == 1: var_fit.append(norm); print("Extracting "+varsplot[parplot-1])
 						if parplot == 2: var_fit.append(offset); print("Extracting "+varsplot[parplot-1])
 						if parplot == 3: var_fit.append(noise); print("Extracting "+varsplot[parplot-1])
@@ -177,9 +180,9 @@ if len(sys.argv) > 1:
 
 				figctr=figctr+1
 
-		fig_all.suptitle(image)
-		plt.close(fig_all)
-		#plt.show()			# Show histogram per image
+		# fig_all.suptitle(image)
+		# plt.close(fig_all)
+		plt.show()			# Show histogram per image
 		
 
 		# STORE COMPUTED VARIABLE
@@ -208,7 +211,7 @@ if len(sys.argv) > 1:
 			vFile.append(float(image.split('sinit_')[1].split('_')[0]))
 
 		if len(files) > 1:
-			dataframe=pd.DataFrame.from_dict(valuesDict, columns=['sinit','Ext 0', '1', '2', '3'], orient='index')
+			dataframe=pd.DataFrame.from_dict(valuesDict, columns=['delay','Ext 0', '1', '2', '3'], orient='index')
 	arr_var=np.array(list_var)
 	arr_var=arr_var[np.argsort(arr_var[:, 0])]	# Sort array by values on first column
 #	print(arr_var)
@@ -219,11 +222,11 @@ if len(sys.argv) > 1:
 		print('\n')
 		print(varsplot[parplot-1]+" for every image in selected area:")
 		#print(dataframe.sort_index())
-		print(dataframe.sort_values(by='sinit'))
+		print(dataframe.sort_values(by='delay'))
 		
 		
 	
-
+	#plt.savefig(dirname+"/checknoise.png")
 	plt.show()
 	
 
@@ -232,7 +235,7 @@ if len(sys.argv) > 1:
 #	fig_var.tight_layout()
 
 	for k in range(0, 4):
-		axs_var[0][k].plot([row[0] for row in arr_var], [row[k+1] for row in arr_var], ".k")
+		axs_var[0][k].plot([row[0]-75 for row in arr_var], [(row[k+1])/(row[0]-75) for row in arr_var], ".k")
 #		axs_var[k].plot([row[0] for row in arr_var], sqrt([row[0] for row in arr_var], arr_var[0, k+1]), "-r")		# Sqrt fit when doing noise vs nsamp
 		axs_var[0][k].set_title('ext '+str(k+1))
 		axs_var[0][k].set_xlabel(string)
@@ -259,7 +262,7 @@ if len(sys.argv) > 1:
 	axs_var[1][3].set_xlabel("NSAMP")
 
 	
-#	plt.savefig(dirname+"/checknoise.png")	# Save plot
+	#plt.savefig(dirname+"/checknoise.png")	# Save plot
 	plt.show()				# Show plot
 	
 	

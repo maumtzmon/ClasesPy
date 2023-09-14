@@ -1,53 +1,224 @@
-import os
-import glob
-import sys
-import numpy as np
-from scipy.stats import norm
-from astropy.stats import median_absolute_deviation as mad
-from astropy.io import fits
-from matplotlib import pyplot as plt
+from functions_py import *
+import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+from  ReconLib import *
 
+# Funtions
+def hist_RowColumn(data_array):
+    Col=np.median(data_array, axis=0)
+    #Col=data[10:640,0]#analisis de Registro vertical, Columnas V
+    bins_Col=np.histogram_bin_edges(Col, bins='fd')
+    Col_hist, bins_Col = np.histogram(Col,bins=bins_Col)
+    u_Col, std_Col = norm.fit(Col)
+    
 
-def plotData(argv):
-    if len(argv) > 1:
-        files = sys.argv[1:]
-        #files =argv
+    Row=np.median(data_array, axis=1)
+    #Row=data[10,10:690] #analisis de Registro horizontal, Renglones H    
+    bins_Row=np.histogram_bin_edges(Row, bins='fd')
+    Row_hist, bins_Row = np.histogram(Row,bins=bins_Row) 
+    u_Row, std_Row = norm.fit(Row)
+    
 
-        dirname=os.path.dirname(files[0])	# Get dirname of first element in files
+    print('media on Row='+str(u_Row)+', stdDev on y='+str(std_Row))
+    print('media on Col='+str(u_Col)+', stdDev on y='+str(std_Col))
 
-        overscan_mask = np.s_[:, 538:]		# 538 <= x
-        mask=np.s_[2:, 10:538]			# Area where variable will be computed
+    return Row, Col, bins_Row, bins_Col, Row_hist, Col_hist #Row_median, Col_median, bines Row, bines Col, Histogram Row, histogram Col
 
-        fig_all, axs_all = plt.subplots(1, 4, figsize=(20, 5))		# Create figures
-        fig_all.tight_layout()
-        if (len(files)>1):
-            fig, axs = plt.subplots(len(files), 4, figsize=(15,10))
-            fig.tight_layout()
+def line(x, m, b): #data, slope, y-intersection (ordenada al origen)
+    return (m*x+b)
 
-        for image in files:
-            hdul=fits.open(image)
-            img=os.path.basename(image)				# Get basename of image
+def secOrder(x,a,b,c):
+    return a*x**2 + b*x + c 
 
-            j=files.index(image)
-            figctr=0
-            for i in range(0, len(hdul)):
-                data=hdul[i].data
-                header=hdul[i].header
-                axs_all[1,figctr].plot(data[1], range(0,700) )
+def totTime(path):
+    hdul=fits.open(path)# fits file to analyze
+    header=hdul[0].header
 
-        else:
-            print("")
-            
+    tStartList=str(header._cards[159]).split("'")[1].split('T')[1].split(':')
+    tEndList=str(header._cards[160]).split("'")[1].split('T')[1].split(':')
 
-            
-        # PLOT
+    tStart=int(tStartList[0])*3600+int(tStartList[1])*60+int(tStartList[2])
+    tEnd=int(tEndList[0])*3600+int(tEndList[1])*60+int(tEndList[2])
 
-        #	plt.legend()
-        plt.show()				# Show plot
-
+    dateStart=header._cards[159][1].split('T')[0]
+    dateEnd=header._cards[160][1].split('T')[0]
+    if (int(dateEnd.split('-')[-1])-int(dateStart.split('-')[-1])) >0:
+        Ttot=tEnd+86400-tStart        # Total time 
     else:
-        print("To run do: python3 plotdata.py path/img*.fits")
+        Ttot=tEnd-tStart        # Total time 
 
-if __name__ == "__main__":
-	argv=sys.argv
-	plotData(argv)
+    NRow=int(str(header._cards[15]).split("'")[1])
+    NCol=int(str(header._cards[16]).split("'")[1])
+    NSamp=int(str(header._cards[17]).split("'")[1])
+
+
+    deltaTperPix=Ttot/(NCol*NRow)
+    deltaTperRow=Ttot/NRow
+
+    expoTimes=[]
+    
+    for mCol in range(0,NCol):  #Fill Exposure Matrix
+        expoTimes.append([])
+        for nRow in range(0,NRow):
+            expoTimes[mCol].append(deltaTperRow*mCol+deltaTperPix*nRow)
+
+
+    ExpoMatrix=np.array(expoTimes)
+    #NROW650_NCOL700
+        
+    
+    return ExpoMatrix, Ttot, NRow, NCol, NSamp
+
+def exposureFactor(path):
+    ExpoMatrix,_,_,_,_=totTime(path)
+    fig_all, axs_all = plt.subplots(nrows=1, ncols=2, figsize=(15, 5),constrained_layout=True)		# Create figures
+    fig_all.suptitle('Exposure Factor', fontsize='large')
+    popt, pcov = curve_fit(line, range(0, len(ExpoMatrix[0])),ExpoMatrix[0]) #ajustar valores de x y yRuido a la funcion "func"
+    axs_all[0].set_title('Horizontal')
+    axs_all[0].set_ylim([-4, 15])
+    axs_all[0].set_ylabel('Exposure time [s]')
+    axs_all[0].set_xlabel('Col')
+    axs_all[1].set_xlabel('Row')
+    axs_all[0].plot(range(0,len(ExpoMatrix[0])), line(range(0,len(ExpoMatrix[0])), popt[0], popt[1]),'r-', label='fit: m=%f [s/pix], b=%f' % tuple(popt))
+    HEF=popt[0] #Horizontal exposure factor
+    axs_all[0].legend()
+    popt, pcov = curve_fit(line, range(0, len(ExpoMatrix[:,0])),ExpoMatrix[:,0])
+    axs_all[1].set_title('Vertical')
+    axs_all[1].plot(range(0,len(ExpoMatrix[:,0])), line(range(0,len(ExpoMatrix[:,0])), popt[0], popt[1]),'b-', label='fit by column: m=%f [s/pix], b=%f' % tuple(popt))
+    VEF=popt[0] #Vertical Exposure Factor
+    axs_all[1].legend()
+    plt.show()
+    return HEF, VEF
+
+def sum_intensity(region, intensities):
+    return np.sum(intensities[region])
+
+plt.rcParams.update({
+    "image.origin": "lower",
+    "image.aspect": 1,
+    #"text.usetex": True,
+    "grid.alpha": .5,
+    "axes.linewidth":2,
+    "lines.linewidth" : 1,
+    "font.size":    15.0,
+    "xaxis.labellocation": 'right',  # alignment of the xaxis label: {left, right, center}
+    "yaxis.labellocation": 'top',  # alignment of the yaxis label: {bottom, top, center}
+    "xtick.top":           True ,  # draw ticks on the top side
+    "xtick.major.size":    8    ,# major tick size in points
+    "xtick.minor.size":    4      ,# minor tick size in points
+    "xtick.direction":     'in',
+    "xtick.minor.visible": True,
+    "ytick.right":           True ,  # draw ticks on the top side
+    "ytick.major.size":    8    ,# major tick size in points
+    "ytick.minor.size":    4      ,# minor tick size in points
+    "ytick.direction":     'in',
+    "ytick.minor.visible": True,
+    "ytick.major.width":   2   , # major tick width in points
+    "ytick.minor.width":   1 ,
+    "xtick.major.width":   2   , # major tick width in points
+    "xtick.minor.width":   1 ,
+    "legend.framealpha": 0 ,
+    "legend.loc": 'best',
+
+})
+
+path='/home/oem/datosFits/spuriousCharge/Microchip/14AUG23/proc_skp_module24_MITLL01_externalVr-4_Vv2_T140__NSAMP225_NROW650_NCOL700_EXPOSURE0_NBINROW1_NBINCOL1_img109.fits'
+hdu_list = fits.open(path)
+print(hdu_list.info())
+print('----------------')
+# hdu_list[0].header
+plt.figure(figsize=(20,10))
+for i in range(4):
+    plt.subplot(2,2,i+1)
+    plt.imshow(hdu_list[i].data-np.median(hdu_list[i].data),vmin=-800,vmax=800,cmap='gray')
+    plt.title('CHID '+str(i))
+    plt.ylabel('Y_pix')
+    plt.xlabel('X_pix')
+plt.show()
+
+nsamp=int(hdu_list[0]._header.cards._header.cards._header._cards[17].image.split("'")[1])
+if nsamp > 200:
+    data_pre = precal(hdu_list,extensions=4)
+    gain, gain_err, data= LocalCalib(data_pre,extensions=4)
+else:
+    data = hdu_list[i].data
+    gain=[200,200,200,200]
+    gain_err=[0,0,0,0]
+    for extension in len(data):
+        data[extension]=data[extension]/gain[extension]
+
+fig=plt.figure(figsize=(20,10))
+for i in range(4):
+    plt.subplot(2,2,i+1)
+    im=plt.imshow(data[i],vmin=-8,vmax=-0, cmap='gray')
+    plt.title('CHID '+str(i))
+    plt.ylabel('Y_pix')
+    plt.xlabel('X_pix')
+    print("CHID "+str(i)+' Gain:({:.2f} +- {:.2f})ADUs'.format(gain[i],gain_err[i]))
+    cbar=fig.colorbar(im)
+    cbar.set_label('electrons [e-]')
+    
+
+
+plt.suptitle('Calibrated Images, cross talk is present')
+
+#plt.savefig('IMAGES_POSCALIB.png', bbox_inches='tight', dpi=100)
+    
+plt.show()
+
+label=ndimage.label(data[0]<5,structure=[[1,1,1],[1,1,1],[1,1,1]])[0]
+fig=plt.figure(figsize=(20,10))
+
+plt.subplot(1,2,1)
+plt.title('label == 0')
+plt.ylabel('Y_pix')
+plt.xlabel('X_pix')
+
+im=plt.imshow(label==0, cmap='gray')
+cbar=fig.colorbar(im)
+cbar.set_label('boolean')
+
+plt.subplot(1,2,2)
+plt.title('data')
+plt.ylabel('Y_pix')
+plt.xlabel('X_pix')
+im=plt.imshow(data[0], cmap='gray', vmin=0, vmax=5)
+cbar=fig.colorbar(im)
+cbar.set_label('[e-]')
+
+fig=plt.figure(figsize=(25,10))
+
+plt.subplot(1,2,1)
+plt.title('Masked')
+
+y=np.ma.array(label==0)  #  "y" es la mascaraa, los eventos son "1"s y lo demas "0"s
+
+maskedData=ma.masked_array(data[0], mask=y)
+maskedPlot=plt.imshow(maskedData, vmin=maskedData.min(), vmax=maskedData.max())
+cbar=fig.colorbar(maskedPlot)
+maskedData.max()
+maskedData.min()
+
+plt.show()
+
+mascara = makeSerialRegisterEventMask(maskedData,n=5,extend=True)
+
+fig=plt.figure(figsize=(20,10))
+
+plt.subplot(1,2,1)
+plt.title('Masked')
+
+y=np.ma.array(label==0)  #  "y" es la mascaraa, los eventos son "1"s y lo demas "0"s
+
+maskedData=ma.masked_array(data[0], mask=mascara[0]+ y)
+maskedPlot=plt.imshow(maskedData, vmin=maskedData.min(), vmax=maskedData.max())
+
+plt.subplot(1,2,2)
+plt.title('overscan')
+overScanPlot=plt.imshow(maskedData[:,550:], vmin=maskedData.min(), vmax=maskedData.max())
+
+cbar=fig.colorbar(maskedPlot)
+maskedData.max()
+maskedData.min()
+
+plt.show()

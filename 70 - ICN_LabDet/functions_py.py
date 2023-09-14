@@ -108,7 +108,7 @@ def precal(hdu_list,extensions=1,chid=0):
             data = hdu_list[i].data
             data -= np.median( data[os_median_mask], axis=1, keepdims=True )  
             data_list.append(data)
-        data_ac=np.array(data_list)
+        data_ac=np.array(data_list)  #data_ac ya son datos calibrados, si solo se calibra aparece XTALK
 
        #--------------------- from Pedro - cleaning Xtalk
         data=np.zeros(data_ac.shape)
@@ -120,9 +120,10 @@ def precal(hdu_list,extensions=1,chid=0):
                         cut =  (data_ac[i] > 1000) & (data_ac[j] > 1e6) #(data_ac[i] > -1000) & (data_ac[i] > 0) & (data_ac[j] > 1e6)  # cut
                         if len(data_ac[j][cut].flatten())!=0:
                             popt, pcov = curve_fit(ax_nob, data_ac[i][cut], data_ac[j][cut])
+                            print(popt)
                             data[i] -= data_ac[j]/popt
                     except (RuntimeError,OptimizeWarning,RuntimeWarning):
-                        print("Error - Xtalk fit failed")
+                        print("Error - Xtalk fit failed on local calib")
                    
     return data
 
@@ -156,7 +157,7 @@ def LocalCalib(data,extensions=1):
 
                 data[i]=data[i]/gain_list
             except (RuntimeError,OptimizeWarning,RuntimeWarning):
-                print(f"Error - gain fit failed")
+                print(f"Error - gain fit failed on local calib")
                 gain_list = -1000
                 gain_err_list = -1000
             
