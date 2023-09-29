@@ -73,6 +73,7 @@ if len(sys.argv) > 1:
 	for image in files:
 		fig_all, axs_all = plt.subplots(1, 4, figsize=(20, 5))	# Define figure to stack histogram of each image
 #		fig_all.tight_layout()
+		imgNumber=image.split(".")[-1].split('img')[-1]
 
 		hdul=fits.open(image)
 #		hdul.info()
@@ -90,8 +91,9 @@ if len(sys.argv) > 1:
 		print("# of peaks to fit: "+str(numpeaks)+"\n")
 
 #		for i in range(0,1):
-		for i in range(0, len(hdul)):
+		for i in range(4, 8):#len(hdul)):
 			data=hdul[i].data; header=hdul[i].header	# Load data and header
+			
 
 			if data is not None:								# Check if data is not empty
 #				data = data - np.median(data, axis=0, keepdims=True)			# Subtract median per column
@@ -102,8 +104,8 @@ if len(sys.argv) > 1:
 				#stringval= header['RUNID']  
 				stringval=image.split('delay_')[1].split('_')[0]#   header["RUNID"]#
 				#stringval=float(header["H1AH"])-float(header["H1AL"])
-				nsamp=float(header['NSAMP'])
-
+				#nsamp=float(header['NSAMP'])
+				nsamp=1
 #				hlabel = string+" "+stringval			# Define label of histogram
 				hlabel = image
 
@@ -180,9 +182,9 @@ if len(sys.argv) > 1:
 
 				figctr=figctr+1
 
-		# fig_all.suptitle(image)
-		# plt.close(fig_all)
-		plt.show()			# Show histogram per image
+		fig_all.suptitle(image)
+		plt.close(fig_all)
+		#plt.show()			# Show histogram per image
 		
 
 		# STORE COMPUTED VARIABLE
@@ -192,23 +194,24 @@ if len(sys.argv) > 1:
 		print(var_fit[0], var_fit[1], var_fit[2], var_fit[3]) #add to Dataframe
 
 		#valuesDict[header['RUNID']]=[int(header['NSAMP']),round(var_fit[0], 4), round(var_fit[1], 4), round(var_fit[2],4), round(var_fit[3],4)]
-		valuesDict[header['RUNID']]=[int(stringval),round(var_fit[0], 4), round(var_fit[1], 4), round(var_fit[2],4), round(var_fit[3],4)]
+		# valuesDict[header['RUNID']]=[int(stringval),round(var_fit[0], 4), round(var_fit[1], 4), round(var_fit[2],4), round(var_fit[3],4)]
+		valuesDict[imgNumber]=[int(stringval),round(var_fit[0], 4), round(var_fit[1], 4), round(var_fit[2],4), round(var_fit[3],4)]
 
 		
 
-#		list_var.append([float(stringval), var[0], var[1], var[2], var[3]])
-		list_var.append([float(stringval), var_fit[0], var_fit[1], var_fit[2], var_fit[3]])		# To use the var obtained from the gaussian fit
+		list_var.append([float(stringval), var[0], var[1], var[2], var[3]])
+		#list_var.append([float(stringval), var_fit[0], var_fit[1], var_fit[2], var_fit[3]])		# To use the var obtained from the gaussian fit
 
-		deltaH.append(float(header["H1AH"])-float(header["H1AL"]))
-		deltaV.append(float(header["V1AH"])-float(header["V1AL"]))
-		deltaT.append(float(header["TGAH"])-float(header["TGAL"]))
-		deltaSW.append(float(header["SWAH"])-float(header["SWAL"]))
-		try:
-			RunID.append(float(header["RUNID"]))
+		# deltaH.append(float(header["H1AH"])-float(header["H1AL"]))
+		# deltaV.append(float(header["V1AH"])-float(header["V1AL"]))
+		# deltaT.append(float(header["TGAH"])-float(header["TGAL"]))
+		# deltaSW.append(float(header["SWAH"])-float(header["SWAL"]))
+		# try:
+		# 	RunID.append(float(header["RUNID"]))
 			
-		except:
-			#RunID.append(float(hlabel.split("_")[-1].split(".")[0]))
-			vFile.append(float(image.split('sinit_')[1].split('_')[0]))
+		# except:
+		# 	#RunID.append(float(hlabel.split("_")[-1].split(".")[0]))
+		# 	vFile.append(float(image.split('sinit_')[1].split('_')[0]))
 
 		if len(files) > 1:
 			dataframe=pd.DataFrame.from_dict(valuesDict, columns=['delay','Ext 0', '1', '2', '3'], orient='index')
@@ -245,21 +248,21 @@ if len(sys.argv) > 1:
 #		axs_var[k].set_yscale('log')
 #		axs_var[k].set_ylim(ymin=1)
 
-	#axis=vFile
-	axis=RunID	
-	axs_var[1][0].plot(axis,deltaV,".k")
-	axs_var[1][0].set_title("Delta V")
-	axs_var[1][0].set_ylabel("Volts")
-	axs_var[1][0].set_xlabel("NSAMP")
-	axs_var[1][1].plot(axis,deltaT,".k")
-	axs_var[1][1].set_title("Delta T")
-	axs_var[1][1].set_xlabel("NSAMP")
-	axs_var[1][2].plot(axis,deltaH,".k")
-	axs_var[1][2].set_title("Delta H")
-	axs_var[1][2].set_xlabel("NSAMP")
-	axs_var[1][3].plot(axis,deltaSW,".k")
-	axs_var[1][3].set_title("Delta SW")
-	axs_var[1][3].set_xlabel("NSAMP")
+# 	#axis=vFile
+# 	axis=RunID	
+# 	axs_var[1][0].plot(axis,deltaV,".k")
+# 	axs_var[1][0].set_title("Delta V")
+# 	axs_var[1][0].set_ylabel("Volts")
+# 	axs_var[1][0].set_xlabel("NSAMP")
+# 	axs_var[1][1].plot(axis,deltaT,".k")
+# 	axs_var[1][1].set_title("Delta T")
+# 	axs_var[1][1].set_xlabel("NSAMP")
+# 	axs_var[1][2].plot(axis,deltaH,".k")
+# 	axs_var[1][2].set_title("Delta H")
+# 	axs_var[1][2].set_xlabel("NSAMP")
+# 	axs_var[1][3].plot(axis,deltaSW,".k")
+# 	axs_var[1][3].set_title("Delta SW")
+# 	axs_var[1][3].set_xlabel("NSAMP")
 
 	
 	#plt.savefig(dirname+"/checknoise.png")	# Save plot
