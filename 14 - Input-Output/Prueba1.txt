@@ -1,6 +1,10 @@
-Hola, este es un archivo de texto.
+# Hola, este es un archivo de texto.
 
-En seguida hay una lista de 5 numeros.
+usuario: Stephan@ICN-UNAM, Mauricio@ICN-UNAM, Brenda@FNAL
+
+# En seguida hay una lista de 5 numeros.
+
+datos:
 
 12
 23
@@ -8,4 +12,4 @@ En seguida hay una lista de 5 numeros.
 51
 99
 
-Fin del archivo.
+# Fin del archivo.
