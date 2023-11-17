@@ -5,7 +5,8 @@ from scipy.stats import chisquare as chisquare
 import pickle
 
 #sys.path.insert(0, '/Users/steph/Desktop/ServicioSocial/Software/Serial_Register_Events_Detection')
-sys.path.insert(0, '/home/mauricio/Software/Serial_Register_Events_Detection')
+#sys.path.insert(0, '/home/mauricio/Software/Serial_Register_Events_Detection')
+sys.path.insert(0, '/home/oem/Software/Serial_Register_Events_Detection')
 
 from ReconLib import *
 
@@ -133,7 +134,7 @@ plt.rcParams.update({
 #path='/Users/steph/Desktop/ServicioSocial/Software/Serial_Register_Events_Detection/FITS_files/proc_skp_module24_MITLL01_externalVr-4_Vv2_T140__NSAMP225_NROW650_NCOL700_EXPOSURE0_NBINROW1_NBINCOL1_img109.fits'
 #path='/home/oem/datosFits/spuriousCharge/Microchip/14AUG23/proc_skp_module24_MITLL01_externalVr-4_Vv2_T140__NSAMP225_NROW650_NCOL700_EXPOSURE0_NBINROW1_NBINCOL1_img109.fits'
 #path='/home/oem/datosFits/MuonCatalog/EXPOSURE_1200A/proc_skp_m-009_microchip_T_170__Vv82_NSAMP_1_NROW_650_NCOL_700_EXPOSURE_1200_NBINROW_1_NBINCOL_1_img_88.fits'
-path='/home/mauricio/datosFits/spuriousCharge/Microchip/14AUG23/proc_skp_module24_MITLL01_externalVr-4_Vv2_T140__NSAMP225_NROW650_NCOL700_EXPOSURE0_NBINROW1_NBINCOL1_img109.fits'
+path='/home/oem/datosFits/serialRegEvents/13OCT23/All/nsamp_324/proc_skp_m-009_microchip_T_170__Vv82_NSAMP_324_NROW_650_NCOL_700_EXPOSURE_0_NBINROW_1_NBINCOL_1_img_103.fits'#/home/mauricio/datosFits/spuriousCharge/Microchip/14AUG23/proc_skp_module24_MITLL01_externalVr-4_Vv2_T140__NSAMP225_NROW650_NCOL700_EXPOSURE0_NBINROW1_NBINCOL1_img109.fits'
 hdu_list = fits.open(path)
 print(hdu_list.info())
 print('----------------')
