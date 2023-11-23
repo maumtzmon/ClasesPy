@@ -134,7 +134,8 @@ plt.rcParams.update({
 #path='/Users/steph/Desktop/ServicioSocial/Software/Serial_Register_Events_Detection/FITS_files/proc_skp_module24_MITLL01_externalVr-4_Vv2_T140__NSAMP225_NROW650_NCOL700_EXPOSURE0_NBINROW1_NBINCOL1_img109.fits'
 #path='/home/oem/datosFits/spuriousCharge/Microchip/14AUG23/proc_skp_module24_MITLL01_externalVr-4_Vv2_T140__NSAMP225_NROW650_NCOL700_EXPOSURE0_NBINROW1_NBINCOL1_img109.fits'
 #path='/home/oem/datosFits/MuonCatalog/EXPOSURE_1200A/proc_skp_m-009_microchip_T_170__Vv82_NSAMP_1_NROW_650_NCOL_700_EXPOSURE_1200_NBINROW_1_NBINCOL_1_img_88.fits'
-path='/home/oem/datosFits/serialRegEvents/13OCT23/All/nsamp_324/proc_skp_m-009_microchip_T_170__Vv82_NSAMP_324_NROW_650_NCOL_700_EXPOSURE_0_NBINROW_1_NBINCOL_1_img_103.fits'#/home/mauricio/datosFits/spuriousCharge/Microchip/14AUG23/proc_skp_module24_MITLL01_externalVr-4_Vv2_T140__NSAMP225_NROW650_NCOL700_EXPOSURE0_NBINROW1_NBINCOL1_img109.fits'
+#path='/home/oem/datosFits/serialRegEvents/13OCT23/All/nsamp_324/proc_skp_m-009_microchip_T_170__Vv82_NSAMP_324_NROW_650_NCOL_700_EXPOSURE_0_NBINROW_1_NBINCOL_1_img_103.fits'#/home/mauricio/datosFits/spuriousCharge/Microchip/14AUG23/proc_skp_module24_MITLL01_externalVr-4_Vv2_T140__NSAMP225_NROW650_NCOL700_EXPOSURE0_NBINROW1_NBINCOL1_img109.fits'
+path="/home/oem/datosFits/serialRegEvents/21NOV23/proc_skp_m-009_microchip_T_170__Vv82_NSAMP_324_NROW_400_NCOL_700_EXPOSURE_0_NBINROW_1_NBINCOL_1_img_68.fits"
 hdu_list = fits.open(path)
 print(hdu_list.info())
 print('----------------')
@@ -154,7 +155,15 @@ serialRegisterEvents_n5, CCDMask, _, _=makeSerialRegisterEventAdvancedMask(hdu_l
 la_mascara=ma.masked_array(hdu_list[0].data, mask=serialRegisterEvents_n5)
 
 #COMBINA LAS MASCARAS DE EVENTOS Y DE REGISTRO SERIAL Y GRAFICA
-label=ndimage.label(hdu_list[0].data[:,:550]>1600,structure=[[1,1,1],[1,1,1],[1,1,1]])[0]
+
+#maximo de OS - promedio OS
+AArea=hdu_list[0].data[:,:550]
+OScan=hdu_list[0].data[:,550:]
+Bkgd_level_AA= np.max(AArea)-np.mean(AArea)
+print(str(np.max(AArea)))
+print(str(np.mean(AArea)))
+
+label=ndimage.label(hdu_list[0].data[:,:550]>np.mean(OScan),structure=[[1,1,1],[1,1,1],[1,1,1]])[0]
 
 #Event Mask
 event_mask=np.invert(label==0)
@@ -175,7 +184,7 @@ background_data=np.ma.masked_array(hdu_list[0].data[:,:550], mask=main_mask)
 
 
 #HACE HISTOGRAMA DEL AREA ACTIVA ENMASCARADA Y GRAFICA Y QUITA LOS VALORES MUY NEGATIVOS
-neg_label=ndimage.label(hdu_list[0].data[:,:550]<-200,structure=[[1,1,1],[1,1,1],[1,1,1]])[0]
+neg_label=ndimage.label(hdu_list[0].data[:,:550]<0,structure=[[1,1,1],[1,1,1],[1,1,1]])[0]
 neg_mask=np.invert(neg_label==0)
 final_mask=np.ma.mask_or(neg_mask, main_mask)
 

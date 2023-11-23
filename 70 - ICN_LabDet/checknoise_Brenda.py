@@ -49,7 +49,7 @@ if len(sys.argv) > 1:
 	list_var=[]				# List to store the computed variable
 
 	expgain = [227.7013, 220.4891, 154.6271, 197.7721]#201.8325949210918, 194.70825464645284, 202.97945260519987, 193.2145155088731]	# Expected gain; if only fitting 1 peak, noise is divided by this number
-	numpeaks = 1				# Number of peaks to fit
+	numpeaks = 2				# Number of peaks to fit
 
 	varsplot = ["Constant (ADU)", "Offset (ADU)", "Noise (e-)", "Gain (ADU/e-)", "SER (e-/pix)"]	# Variables that can be chosen to be plotted
 	parplot = 3			# From varsplot, index of parameter to plot; for example if you want to plot Noise (e-), varsplot=3
@@ -91,7 +91,7 @@ if len(sys.argv) > 1:
 		print("# of peaks to fit: "+str(numpeaks)+"\n")
 
 #		for i in range(0,1):
-		for i in range(4, 8):#len(hdul)):
+		for i in range(len(hdul)):
 			data=hdul[i].data; header=hdul[i].header	# Load data and header
 			
 
@@ -101,22 +101,22 @@ if len(sys.argv) > 1:
 
 				# Extract info from header
 				####   X axis Variable   ####
-				#stringval= header['RUNID']  
-				stringval=image.split('delay_')[1].split('_')[0]#   header["RUNID"]#
+				stringval= header['RUNID']  
+				#stringval=image.split('delay_')[1].split('_')[0]#   header["RUNID"]#
 				#stringval=float(header["H1AH"])-float(header["H1AL"])
-				#nsamp=float(header['NSAMP'])
-				nsamp=1
+				nsamp=float(header['NSAMP'])
+				#nsamp=1
 #				hlabel = string+" "+stringval			# Define label of histogram
 				hlabel = image
 
 				#Plot histogram of data to obtain offset
-				hist, bin_edges = np.histogram(data[mask].flatten(), bins=1000000)
+				hist, bin_edges = np.histogram(data[mask].flatten(), bins=10000)
 				offset = bin_edges[np.argmax(hist)]
 #				print(offset)
-				#data = data-offset		# Subtract offset from data (offset artificial)
+				data = data-offset		# Subtract offset from data (offset artificial)
 #				offset = 0			# Offset to plot
 				
-				bin_heights, bin_borders, _ = axs_all[figctr].hist(data[mask].flatten(), range=[offset-3000, offset+3000], bins=200, histtype='step', label=hlabel)	# Plot histogram
+				bin_heights, bin_borders, _ = axs_all[figctr].hist(data[mask].flatten(), bins=20000, histtype='step', label=hlabel)	# Plot histogram
 				offset_fit = bin_borders[np.argmax(bin_heights)]	# Offset to fit
 #				offset_fit = 0						# Offset to fit
 				axs_all[figctr].set_title('ext '+str(figctr+1))
@@ -168,7 +168,7 @@ if len(sys.argv) > 1:
 					print("Successful fit :)"); print("Extracting "+varsplot[parplot-1])
 				except:
 					try:	# Enters here if numpeaks=1, try to extract parameters from gaussian fit to 0e- peak
-						norm = par_fit[0]; offset = par_fit[1]; noise = par_fit[2];#/expgain[figctr];
+						norm = par_fit[0]; offset = par_fit[1]; noise = par_fit[2]/expgain[figctr];
 						if parplot == 1: var_fit.append(norm); print("Extracting "+varsplot[parplot-1])
 						if parplot == 2: var_fit.append(offset); print("Extracting "+varsplot[parplot-1])
 						if parplot == 3: var_fit.append(noise); print("Extracting "+varsplot[parplot-1])
@@ -183,8 +183,8 @@ if len(sys.argv) > 1:
 				figctr=figctr+1
 
 		fig_all.suptitle(image)
-		plt.close(fig_all)
-		#plt.show()			# Show histogram per image
+		#plt.close(fig_all)
+		plt.show()			# Show histogram per image
 		
 
 		# STORE COMPUTED VARIABLE
@@ -194,13 +194,13 @@ if len(sys.argv) > 1:
 		print(var_fit[0], var_fit[1], var_fit[2], var_fit[3]) #add to Dataframe
 
 		#valuesDict[header['RUNID']]=[int(header['NSAMP']),round(var_fit[0], 4), round(var_fit[1], 4), round(var_fit[2],4), round(var_fit[3],4)]
-		# valuesDict[header['RUNID']]=[int(stringval),round(var_fit[0], 4), round(var_fit[1], 4), round(var_fit[2],4), round(var_fit[3],4)]
-		valuesDict[imgNumber]=[int(stringval),round(var_fit[0], 4), round(var_fit[1], 4), round(var_fit[2],4), round(var_fit[3],4)]
+		valuesDict[header['RUNID']]=[int(stringval),round(var_fit[0], 4), round(var_fit[1], 4), round(var_fit[2],4), round(var_fit[3],4)]
+		#valuesDict[imgNumber]=[int(stringval),round(var_fit[0], 4), round(var_fit[1], 4), round(var_fit[2],4), round(var_fit[3],4)]
 
 		
 
-		list_var.append([float(stringval), var[0], var[1], var[2], var[3]])
-		#list_var.append([float(stringval), var_fit[0], var_fit[1], var_fit[2], var_fit[3]])		# To use the var obtained from the gaussian fit
+		#list_var.append([float(stringval), var[0], var[1], var[2], var[3]])
+		list_var.append([float(stringval), var_fit[0], var_fit[1], var_fit[2], var_fit[3]])		# To use the var obtained from the gaussian fit
 
 		# deltaH.append(float(header["H1AH"])-float(header["H1AL"]))
 		# deltaV.append(float(header["V1AH"])-float(header["V1AL"]))
@@ -234,16 +234,16 @@ if len(sys.argv) > 1:
 	
 
 	# PLOT
-	fig_var, axs_var = plt.subplots(2, 4, figsize=(20, 5))
+	fig_var, axs_var = plt.subplots(1, 4, figsize=(20, 5))
 #	fig_var.tight_layout()
 
 	for k in range(0, 4):
-		axs_var[0][k].plot([row[0]-75 for row in arr_var], [(row[k+1])/(row[0]-75) for row in arr_var], ".k")
-#		axs_var[k].plot([row[0] for row in arr_var], sqrt([row[0] for row in arr_var], arr_var[0, k+1]), "-r")		# Sqrt fit when doing noise vs nsamp
-		axs_var[0][k].set_title('ext '+str(k+1))
-		axs_var[0][k].set_xlabel(string)
-		axs_var[0][k].set_ylabel(varsplot[parplot-1])
-		axs_var[0][k].grid(True)
+		axs_var[k].plot([row[0] for row in arr_var], [(row[k+1]) for row in arr_var], ".k")
+		#axs_var[k].plot([row[0] for row in arr_var], sqrt([row[0] for row in arr_var], arr_var[0, k+1]), "-r")		# Sqrt fit when doing noise vs nsamp
+		axs_var[k].set_title('ext '+str(k+1))
+		axs_var[k].set_xlabel(string)
+		axs_var[k].set_ylabel(varsplot[parplot-1])
+		axs_var[k].grid(True)
 #		axs_var[k].set_xscale('log')
 #		axs_var[k].set_yscale('log')
 #		axs_var[k].set_ylim(ymin=1)
