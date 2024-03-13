@@ -181,8 +181,7 @@ if len(sys.argv) > 1:
 #				var.append(np.median(data[overscan_mask]))			# Median
 
 				figctr=figctr+1
-
-		fig_all.suptitle(image)
+		#fig_all.suptitle(image)
 		#plt.close(fig_all)
 		plt.show()			# Show histogram per image
 		
