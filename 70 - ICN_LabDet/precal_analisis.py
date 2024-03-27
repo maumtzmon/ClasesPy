@@ -37,6 +37,7 @@ plt.rcParams.update({
     "xtick.minor.width":   1 ,
     "legend.framealpha": 0 ,
     "legend.loc": 'best',
+    
 
 })
 
@@ -57,13 +58,13 @@ hdu_list[0].header
 fig,axs=plt.subplots(ncols=2,nrows=2, sharex=True, sharey=True,figsize=(20,10))
 
 raw_1=axs[0][0].imshow(hdu_list[0].data, vmin=np.median(hdu_list[0].data)-800,vmax=np.median(hdu_list[0].data)+800)
-fig.colorbar(raw_1,ax=axs[0][0])
+fig.colorbar(raw_1,ax=axs[0][0], location='bottom')
 raw_2=axs[0][1].imshow(hdu_list[1].data, vmin=np.median(hdu_list[1].data)-800,vmax=np.median(hdu_list[1].data)+800)
-fig.colorbar(raw_2,ax=axs[0][1])
+fig.colorbar(raw_2,ax=axs[0][1], location='bottom')
 raw_3=axs[1][0].imshow(hdu_list[2].data, vmin=np.median(hdu_list[2].data)-800,vmax=np.median(hdu_list[2].data)+800)
-fig.colorbar(raw_3,ax=axs[1][0])
+fig.colorbar(raw_3,ax=axs[1][0], location='bottom')
 raw_4=axs[1][1].imshow(hdu_list[3].data, vmin=np.median(hdu_list[3].data)-800,vmax=np.median(hdu_list[3].data)+800)
-fig.colorbar(raw_4,ax=axs[1][1])
+fig.colorbar(raw_4,ax=axs[1][1], location='bottom')
 
 
 plt.show()
@@ -72,30 +73,39 @@ raw_data=[]
 for i in range(4):
     raw_data.append(np.copy(hdu_list[i].data))
 
-data_precal=precal(hdu_list,extensions=4)
+data_copy=np.copy(hdu_list[0].data)
+data_copy -= np.median( data_copy[os_median_mask], axis=1, keepdims=True ) 
+
+
+Plot2Images_v2(hdu_list[0].data, data_copy, MinRange=np.median(hdu_list[0].data)-800, MaxRange=np.median(hdu_list[0].data)+800, )
+
+
+data_precal=[]
+for i in range(4):
+    data_precal.append(precal(hdu_list, chid=i))
 
 
 
 
 fig,axs=plt.subplots(ncols=4,nrows=2, sharex=True, sharey=True,figsize=(20,10))
 raw_1=axs[0][0].imshow(raw_data[0], vmin=np.median(raw_data[0])-1000,vmax=np.median(raw_data[0])+1000)
-fig.colorbar(raw_1,ax=axs[0][0])
+fig.colorbar(raw_1,ax=axs[0][0], location='bottom')
 raw_2=axs[0][1].imshow(raw_data[1], vmin=np.median(raw_data[1])-1000,vmax=np.median(raw_data[1])+1000)
-fig.colorbar(raw_2,ax=axs[0][1])
+fig.colorbar(raw_2,ax=axs[0][1], location='bottom')
 raw_3=axs[0][2].imshow(raw_data[2], vmin=np.median(raw_data[2])-1000,vmax=np.median(raw_data[2])+1000)
-fig.colorbar(raw_3,ax=axs[0][2])
+fig.colorbar(raw_3,ax=axs[0][2], location='bottom')
 raw_4=axs[0][3].imshow(raw_data[3], vmin=np.median(raw_data[3])-1000,vmax=np.median(raw_data[3])+1000)
-fig.colorbar(raw_4,ax=axs[0][3])
+fig.colorbar(raw_4,ax=axs[0][3], location='bottom')
 
 data_1=axs[1][0].imshow(data_precal[0])
-fig.colorbar(data_1,ax=axs[1][0])
+fig.colorbar(data_1,ax=axs[1][0], location='bottom')
 data_2=axs[1][1].imshow(data_precal[1])
-fig.colorbar(data_2,ax=axs[1][1])
+fig.colorbar(data_2,ax=axs[1][1], location='bottom')
 data_3=axs[1][2].imshow(data_precal[2])
-fig.colorbar(data_3,ax=axs[1][2])
+fig.colorbar(data_3,ax=axs[1][2], location='bottom')
 data_4=axs[1][3].imshow(data_precal[3])
-fig.colorbar(data_4,ax=axs[1][3])
-
+fig.colorbar(data_4,ax=axs[1][3], location='bottom')
+plt.tight_layout()
 
 plt.show()
 
@@ -104,11 +114,11 @@ plt.show()
 fig,axs=plt.subplots(ncols=2,nrows=2,figsize=(18,13))
 
 top_left=axs[0][0].imshow(raw_data[3])
-fig.colorbar(top_left,ax=axs[0][0])
+fig.colorbar(top_left,ax=axs[0][0], location='bottom')
 bottom_left=axs[1][0].imshow(data_precal[3])
-fig.colorbar(bottom_left,ax=axs[1][0])
+fig.colorbar(bottom_left,ax=axs[1][0], location='bottom')
 
 top_right=axs[0][1].hist(raw_data[3][100:300,550:].flatten(), bins=3000, range=(np.median(raw_data[3][100:300,550:])-1000,np.median(raw_data[3][100:300,550:])+1900))
 bottom_right=axs[1][1].hist(data_precal[3][100:300,550:].flatten(), bins=3000, range=(-1000,1900))
-
+plt.tight_layout()
 plt.show()
