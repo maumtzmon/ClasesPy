@@ -75,6 +75,85 @@ def Noise(h, overscan_mask, iMCM, nCCDs, dataOK=True, doPlot=False, pdfname='noi
         plt.close()
     return noise
 # ------------------------------------------------------------------------------
+
+def Gain(h, active_mask, iMCM, nCCDs, dataOK, doPlot, pdfname):
+    gain = []
+    plt.figure(figsize=(24,24))
+    plt.xticks(fontsize=13)
+    plt.yticks(fontsize=13)
+    plt.title("MCM {:d}".format(iMCM), fontsize=18)
+    for i in range(nCCDs):
+        if dataOK:
+            plt.subplot(4,4,i+1)
+            y,xb=np.histogram(h[i+1].data[active_mask].flatten(), bins=np.linspace(-100,500,300))
+            x=(xb[1:]+xb[:-1])/2
+            plt.plot(x,y,label='MCM {:d} – ohdu = {:d}'.format(iMCM,i+1))
+            # gaussian2 fit
+            try:
+                popt,pcov=curve_fit(gaussian2,x,y,p0=[-10,60,10000, 300, 1000])
+                plt.plot(x,gaussian2(x,*popt),label="Gain: {:.3f} ADUs/e-".format(popt[3]))
+                gain.append(popt[3])
+            except RuntimeError:
+                print("Error - gain fit failed" + pdfname)
+                gain.append(-1)
+            plt.legend(fontsize=13)
+            plt.xlabel("Charge [ADUs]",fontsize=12)
+            plt.yscale("log")
+            plt.ylabel("Entries",fontsize=12)
+        else: gain.append(-1)
+    # to save the plot
+    if doPlot:
+        pdf_filename = f'gain_{pdfname}.pdf'
+        plt.savefig(pdf_filename, format='pdf')
+    plt.close()
+    return gain
+# ------------------------------------------------------------------------------
+
+def Ser(h, active_mask, iMCM, nCCDs, dataOK, gain, doPlot, pdfname, itera=10, thr=5):
+    ser = []
+    plt.figure(figsize=(24,24))
+    plt.xticks(fontsize=13)
+    plt.yticks(fontsize=13)
+    plt.title("MCM {:d}".format(iMCM), fontsize=18)
+    for i in range(nCCDs):
+        if dataOK:
+            data = h[i+1].data/gain[i]
+            event_mask = data > thr
+            event_halo_mask = ndimage.binary_dilation(
+                              event_mask,
+                              iterations = itera,
+                              structure = ndimage.generate_binary_structure(rank=2, connectivity=2))
+            dataMasked = np.where(event_halo_mask, np.nan, data )
+            #mask = ndimage.binary_dilation(data>thr,iterations=itera,structure=[[1,1,1],[1,1,1],[1,1,1]])
+            #dataMasked = data - 1000000*mask.astype(data.dtype)
+            #dataMasked = np.ma.masked_less(dataMasked, -50000)
+            plt.subplot(4,4,i+1)
+            y, xb = np.histogram(dataMasked[active_mask].flatten(),range=[-0.5,2.5],bins=200)
+            x = (xb[1:]+xb[:-1])/2
+            plt.plot(x, y,label='MCM {:d} – ohdu = {:d}'.format(iMCM,i+1))
+            try:
+                popt, pcov = curve_fit(convolution, x, y, p0=[-0.4, 0.2, 1000, 0.1])
+                plt.plot(x, convolution(x, *popt), label="Noise: {:.3f}  SER: {:.4f} ".format(abs(popt[1]),popt[3]),color='red')
+                if popt[3]>0 and popt[3]<100:
+                    ser.append(popt[3])
+                else: ser.append(-1)
+            except RuntimeError:
+                print("Error - convolution fit failed " + pdfname)
+                ser.append(-1)
+            plt.xlabel("e-",fontsize=12)
+            plt.ylabel("Entries",fontsize=12)
+            plt.yscale("log")
+            plt.legend(fontsize=13)
+        else: ser.append(-1)
+    # to save the ploti
+    if doPlot:
+        pdf_filename = f'ser_{pdfname}.pdf'
+        plt.savefig(pdf_filename, format='pdf')
+    plt.close()
+    return ser
+# -------------------------------------------------------------------------
+
+
 #
 #Channel mapping between MCM and Mux in the front-end==============================================================
 #MCM=>FLEX=>idb=>Front end electronics
@@ -120,11 +199,14 @@ listFiles=os. listdir(path_files)
 numberList = []
 dict_list = {}
 noise_list = []
+gain_list = []
+ser_list = []
+
 for i in listFiles:
     dict_list[(i.split('_')[-1]).split('.')[0]]=[i]
 
-#order2process=sorted(dict_list)
-order2process=['27']
+order2process=sorted(dict_list)
+#order2process=['18']
 for i in order2process:
     fileName=dict_list[i][0].split('.')[0]
     MCMNro=1
@@ -156,16 +238,95 @@ for i in order2process:
 
     hm=hdu_list_MCM
     
+    
     plt.figure(figsize=(24,8))
     for ext in range(nCCDs):
         plt.subplot(4,4,ext+1)
         plt.imshow(hm[ext+1].data[overscan_mask]-np.median(hm[ext+1].data[overscan_mask]), vmin=-50, vmax=50)
         plt.title('MCM1 – ohdu = {:d}'.format(ext+1))
-    plt.show()
+    #plt.show()
+    plt.close()
+
 
     ohdusOK=True
 
     file_FITS=fits.open(dict_list[i][1])
-    noise_list.append(Noise(file_FITS, overscan_mask, MCMNro, nCCDs, ohdusOK, doPlot=True, pdfname='None.pdf'))
 
-    print("all ok")
+    hmb = hm                    #se sobre escribe el dato, 
+    for i in range(nCCDs):      #el valor de la imagen sera el de la imagen cruda menos la mediana
+        hmb[i+1].data = hm[i+1].data.astype('float64') - np.median(hm[i+1].data[overscan_mask], axis=1, keepdims=True)
+
+    noise_list.append(Noise(hmb, overscan_mask, MCMNro, nCCDs, ohdusOK, doPlot=False, pdfname='None.pdf'))
+    gain_list.append(Gain(hmb, overscan_mask, MCMNro, nCCDs, ohdusOK, doPlot=False, pdfname='None.pdf'))
+    #h, active_mask, iMCM, nCCDs, dataOK, gain, doPlot, pdfname, itera=10, thr=5
+    ser_list.append(Ser(hmb, active_mask, MCMNro, nCCDs, ohdusOK, gain_list[-1],doPlot=False, pdfname='None.pdf'))
+
+print("all ok")
+
+nccds=16     #Se genera lista con las ganancias de cada canal con todos los nsamps
+nnsamp=16          # es decir gainForNsamp=[[Ganancia canal 1 con nsamp1,2,3,4,...n ],[Ganancia canal 2 con nsamp1,2,3,4,...n],..,[Ganancia canal 16 con nsamp1,2,3,4,...n]]
+chipList=[]
+noise_trans=[]
+for i in range(nccds):
+    chipList=[]
+    for j in range(nnsamp):
+        noiseChip=noise_list[j][i]
+        chipList.append(noiseChip)
+    noise_trans.append(chipList)
+        
+gain_trans=[]
+for i in range(nccds):
+    chipList=[]
+    for j in range(nnsamp):
+        gainChip=gain_list[j][i]
+        chipList.append(gainChip)
+    gain_trans.append(chipList)
+
+
+ser_trans=[]
+for i in range(nccds):
+    chipList=[]
+    for j in range(nnsamp):
+        serChip=ser_list[j][i]
+        chipList.append(serChip)
+    ser_trans.append(chipList)
+
+print("all ok")
+
+fig, axs = plt.subplots(ncols=4,nrows=4,figsize=(12,8))
+i=0
+for ncol in axs:
+    for nrow in ncol:
+        nrow.scatter(order2process,noise_list[i])
+        i+=1
+plt.show()
+
+fig, axs = plt.subplots(ncols=4,nrows=4,figsize=(12,8))
+i=0
+for ncol in axs:
+    for nrow in ncol:
+        nrow.scatter(order2process,gain_trans[i])
+        i+=1
+plt.show()
+
+fig, axs = plt.subplots(ncols=4,nrows=4,figsize=(12,8))
+i=0
+for ncol in axs:
+    for nrow in ncol:
+        nrow.scatter(order2process,ser_trans[i])
+        i+=1
+plt.show()
+
+print("all ok")
+
+
+# from matplotlib import pyplot as plt
+
+# y=[0,1,2,3,4,5,6,7,8,9]
+# x=[18,19,20,21,22,23,24,25,26,27]
+
+# fig, axs = plt.subplots(ncols=4,nrows=4,figsize=(12,8))
+# for ncol in axs:
+#     for nrow in ncol:
+#         nrow.scatter(x,y)
+# plt.show()
