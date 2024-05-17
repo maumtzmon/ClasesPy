@@ -87,21 +87,22 @@ def Noise(h, overscan_mask, iMCM, nCCDs, dataOK, doPlot=False, pdfname='noise'):
     noise = []
     ANSAMP=h[1].header["ANSAMP"]
     fig, axs = plt.subplots(ncols=4,nrows=4,figsize=(15,15))
-
+    
     i=0
     for ncol in axs:
        for nrow in ncol:
-            if int(ANSAMP)>1:
-                hist,bins,_=nrow.hist(h[i+1].data[overscan_mask].flatten(), bins=100, range=(-50,50))
+            center=np.median(h[i+1].data[overscan_mask]/int(ANSAMP))
+            if int(ANSAMP)<=1:
+                hist,bins,_=nrow.hist(h[i+1].data[overscan_mask].flatten()/int(ANSAMP), bins=100)#, range=(-50,50))
                 x=(bins[1:]+bins[:-1])/2
-            elif int(ANSAMP)>10:
-                hist,bins,_=nrow.hist(h[i+1].data[overscan_mask].flatten(), bins=100, range=(-10,0))
+            elif 1<int(ANSAMP)<=10:
+                hist,bins,_=nrow.hist(h[i+1].data[overscan_mask].flatten()/int(ANSAMP), bins=100)#, range=(-2,2))
                 x=(bins[1:]+bins[:-1])/2
-            elif int(ANSAMP)>20:
-                hist,bins,_=nrow.hist(h[i+1].data[overscan_mask].flatten(), bins=100, range=(-2,2))
+            elif 100>int(ANSAMP)>=10:
+                hist,bins,_=nrow.hist(h[i+1].data[overscan_mask].flatten()/int(ANSAMP), bins=100)#, range=(-.5,.5))
                 x=(bins[1:]+bins[:-1])/2
             else:
-                hist,bins,_=nrow.hist(h[i+1].data[overscan_mask].flatten(), bins=100, range=(-100,100))
+                hist,bins,_=nrow.hist(h[i+1].data[overscan_mask].flatten()/int(ANSAMP), bins=100)#, range=(-.5,.5))
                 x=(bins[1:]+bins[:-1])/2
        
            

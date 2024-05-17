@@ -47,7 +47,7 @@ nCCDs=16
 
 
 ### Main Rutine
-path_files='/home/mauricio/datosFits/mcm_data/ansamp'
+path_files='/home/oem/datosFits/mcm_data/ansamp'
 listFiles=os. listdir(path_files) 
 numberList = []
 dict_list = {}
@@ -59,7 +59,7 @@ ANSAMP_list=[]
 for i in listFiles:
     dict_list[(i.split('_')[-1]).split('.')[0]]=[i]
 
-order2process=sorted(dict_list)
+order2process=sorted(dict_list)  #generea lista con el orden en el que va a procesar los archivos
 #order2process=['18']
 
 for i in order2process:
@@ -105,7 +105,8 @@ for i in order2process:
     plt.figure(figsize=(24,8))
     for ext in range(nCCDs):
         plt.subplot(4,4,ext+1)
-        plt.imshow(hm[ext+1].data[overscan_mask]-np.median(hm[ext+1].data[overscan_mask]), vmin=-50, vmax=50)
+        Data_norm = hm[ext+1].data[overscan_mask]-np.median(hm[ext+1].data[overscan_mask])
+        plt.imshow(Data_norm, vmin=-50, vmax=50)
         plt.title('MCM1 – ohdu = {:d}'.format(ext+1))
     #plt.show()
     plt.close()
@@ -119,8 +120,8 @@ for i in order2process:
     for i in range(nCCDs):      #el valor de la imagen sera el de la imagen cruda menos la mediana
         hmb[i+1].data = (hm[i+1].data.astype('float64') - np.median(hm[i+1].data[overscan_mask], axis=1, keepdims=True))/ANSAMP
 
-    #noise_list.append(ana.Noise(hmb, overscan_mask, MCMNro, nCCDs, ohdusOK, doPlot=False, pdfname='None.pdf'))
-    gain_list.append(ana.Gain(hmb, overscan_mask, MCMNro, nCCDs, ohdusOK, doPlot=False, pdfname='None.pdf'))
+    noise_list.append(ana.Noise(hmb, overscan_mask, MCMNro, nCCDs, ohdusOK, doPlot=True, pdfname='None.pdf'))
+    #gain_list.append(ana.Gain(hmb, overscan_mask, MCMNro, nCCDs, ohdusOK, doPlot=False, pdfname='None.pdf'))
     #h, active_mask, iMCM, nCCDs, dataOK, gain, doPlot, pdfname, itera=10, thr=5
     #ser_list.append(ana.Ser(hmb, active_mask, MCMNro, nCCDs, ohdusOK, gain_list[-1],doPlot=False, pdfname='None.pdf'))
 
