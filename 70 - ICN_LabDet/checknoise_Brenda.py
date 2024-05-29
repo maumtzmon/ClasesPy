@@ -182,8 +182,8 @@ if len(sys.argv) > 1:
 
 				figctr=figctr+1
 		#fig_all.suptitle(image)
-		#plt.close(fig_all)
-		plt.show()			# Show histogram per image
+		plt.close(fig_all)
+		#plt.show()			# Show histogram per image
 		
 
 		# STORE COMPUTED VARIABLE
@@ -264,7 +264,7 @@ if len(sys.argv) > 1:
 # 	axs_var[1][3].set_xlabel("NSAMP")
 
 	
-	#plt.savefig(dirname+"/checknoise.png")	# Save plot
+	plt.savefig(dirname+"/checknoise.png")	# Save plot
 	plt.show()				# Show plot
 	
 	
