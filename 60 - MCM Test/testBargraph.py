@@ -61,7 +61,7 @@ for file in file_list:
     plt.yscale('log')
     plt.ylim(1,25e3)
     plt.legend()
-    #plt.show()
+    plt.show()
     plt.close()
     noise_list.append(popt[1])
     
