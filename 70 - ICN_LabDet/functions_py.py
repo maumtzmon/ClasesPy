@@ -129,7 +129,7 @@ def precal(hdu_list,extensions=1,chid=0):
 
 def LocalCalib(data,extensions=1):
     if extensions==1:
-        hist, bins = np.histogram( data[active_mask].flatten(), bins = np.arange(-400, 1000, 1) )
+        hist, bins = np.histogram( data[overscan_mask].flatten(), bins = np.arange(-400, 1000, 1) )
         x = (bins[1:] + bins[:-1])/2
         try:
             popt_g, pcov = curve_fit( gaussian2, x, hist, p0=[ 0, 60, 780, 1e3, 1e2 ] )
@@ -145,7 +145,7 @@ def LocalCalib(data,extensions=1):
         gain=[]
         gain_err=[]
         for i in range(extensions):
-            hist, bins = np.histogram( data[i][active_mask].flatten(), bins = np.arange(-400, 1000, 1) )
+            hist, bins = np.histogram( data[i][overscan_mask].flatten(), bins = np.arange(-400, 1000, 1) )
             x = (bins[1:] + bins[:-1])/2
             try:
                 popt_g, pcov = curve_fit( gaussian2, x, hist, p0=[ 0, 80, 200, 1e3, 1e2] ) #optimize for MIT
